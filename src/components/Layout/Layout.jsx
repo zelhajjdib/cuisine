@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import styles from './Layout.module.css';
 
 const Layout = () => {
@@ -14,9 +14,9 @@ const Layout = () => {
           
           <nav className={styles.nav}>
             <ul className={styles.navList}>
-              <li><a href="/" className={styles.navLink}>Accueil</a></li>
-              <li><a href="/catalogue" className={styles.navLink}>Catalogue</a></li>
-              <li><a href="/contact" className={styles.navLink}>Contact</a></li>
+              <li><Link to="/" className={styles.navLink}>Accueil</Link></li>
+              <li><Link to="/catalogue" className={styles.navLink}>Catalogue</Link></li>
+              <li><Link to="/contact" className={styles.navLink}>Contact</Link></li>
             </ul>
           </nav>
 
@@ -47,9 +47,9 @@ const Layout = () => {
           <div>
             <h4 className={styles.footerSubtitle}>Liens Rapides</h4>
             <ul className={styles.footerLinks}>
-              <li><a href="/">Accueil</a></li>
-              <li><a href="/catalogue">Catalogue complet</a></li>
-              <li><a href="/cgv">CGV</a></li>
+              <li><Link to="/">Accueil</Link></li>
+              <li><Link to="/catalogue">Catalogue complet</Link></li>
+              <li><Link to="/cgv">CGV</Link></li>
             </ul>
           </div>
           <div>

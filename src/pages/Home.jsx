@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import styles from './Home.module.css';
 import { ArrowRight } from 'lucide-react';
 
@@ -17,9 +18,9 @@ const Home = () => {
             Découvrez notre sélection de matériel de cuisine haut de gamme pour sublimer vos créations culinaires.
           </p>
           <div className={`${styles.actions} animate-fade-in`} style={{ animationDelay: '0.6s' }}>
-            <a href="/catalogue" className="btn btn-accent">
+            <Link to="/catalogue" className="btn btn-accent">
               Découvrir le catalogue <ArrowRight size={20} />
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -37,21 +38,21 @@ const Home = () => {
               <div className={styles.cardImage}></div>
               <div className={styles.cardContent}>
                 <h3>Coutellerie d'Exception</h3>
-                <a href="/catalogue?categorie=couteaux" className={styles.link}>Explorer</a>
+                <Link to="/catalogue" className={styles.link}>Explorer</Link>
               </div>
             </div>
             <div className={styles.card}>
               <div className={styles.cardImage}></div>
               <div className={styles.cardContent}>
                 <h3>Cuisson Haute Performance</h3>
-                <a href="/catalogue?categorie=cuisson" className={styles.link}>Explorer</a>
+                <Link to="/catalogue" className={styles.link}>Explorer</Link>
               </div>
             </div>
             <div className={styles.card}>
               <div className={styles.cardImage}></div>
               <div className={styles.cardContent}>
                 <h3>Petit Électroménager</h3>
-                <a href="/catalogue?categorie=robots" className={styles.link}>Explorer</a>
+                <Link to="/catalogue" className={styles.link}>Explorer</Link>
               </div>
             </div>
           </div>
