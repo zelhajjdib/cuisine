@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+  import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './AdminLogin.module.css';
@@ -9,11 +9,14 @@ const AdminLogin = () => {
   const { login, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
-  if (isAdmin) {
-    navigate('/admin/dashboard');
-    return null;
-  }
+  // Redirect if already logged in (must be inside useEffect in React 18+)
+  useEffect(() => {
+    if (isAdmin) {
+      navigate('/admin/dashboard');
+    }
+  }, [isAdmin, navigate]);
+
+  if (isAdmin) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();

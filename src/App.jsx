@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Catalogue from './pages/Catalogue';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
+import Contact from './pages/Contact';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import { CartProvider } from './contexts/CartContext';
@@ -23,6 +24,7 @@ function App() {
             <Route path="catalogue" element={<Catalogue />} />
             <Route path="produit/:id" element={<ProductDetail />} />
             <Route path="panier" element={<Cart />} />
+            <Route path="contact" element={<Contact />} />
           </Route>
           
           <Route path="/admin" element={<AdminLogin />} />
