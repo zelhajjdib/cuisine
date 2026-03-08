@@ -44,16 +44,97 @@ const Home = () => {
             <div className={styles.card}>
               <div className={styles.cardImage}></div>
               <div className={styles.cardContent}>
-                <h3>Cuisson Haute Performance</h3>
+                <h3>Cuisson & Inox</h3>
                 <Link to="/catalogue" className={styles.link}>Explorer</Link>
               </div>
             </div>
             <div className={styles.card}>
               <div className={styles.cardImage}></div>
               <div className={styles.cardContent}>
-                <h3>Petit Électroménager</h3>
+                <h3>Matériel Électrique</h3>
                 <Link to="/catalogue" className={styles.link}>Explorer</Link>
               </div>
+            </div>
+            <div className={styles.card}>
+              <div className={styles.cardImage}></div>
+              <div className={styles.cardContent}>
+                <h3>Plonge & Entretien</h3>
+                <Link to="/catalogue" className={styles.link}>Explorer</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products / Best Sellers */}
+      <section className={styles.bestSellers}>
+        <div className="container">
+          <div className={styles.sectionHeader}>
+            <h2>Les Indispensables du Chef</h2>
+            <p>Nos meilleures ventes, sélectionnées et approuvées par les professionnels.</p>
+          </div>
+          
+          <div className={styles.productCarousel}>
+            <Link to="/produit/1" className={styles.productCard}>
+              <div className={styles.productImage} style={{ backgroundImage: `url('https://images.unsplash.com/photo-1593618998160-e34014e67546?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')` }}></div>
+              <div className={styles.productInfo}>
+                <span className={styles.productCategory}>Coutellerie</span>
+                <h4>Couteau de Chef Japonais 20cm</h4>
+                <span className={styles.productPrice}>129.99 €</span>
+              </div>
+            </Link>
+
+            <Link to="/produit/2" className={styles.productCard}>
+              <div className={styles.productImage} style={{ backgroundImage: `url('https://images.unsplash.com/photo-1584992236310-6edddc08acff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')` }}></div>
+              <div className={styles.productInfo}>
+                <span className={styles.productCategory}>Cuisson</span>
+                <h4>Batterie de Cuisine Inox 5 Pièces</h4>
+                <span className={styles.productPrice}>299.00 €</span>
+              </div>
+            </Link>
+
+            <Link to="/produit/3" className={styles.productCard}>
+              <div className={styles.productImage} style={{ backgroundImage: `url('https://images.unsplash.com/photo-1585515320310-259814833e62?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')` }}></div>
+              <div className={styles.productInfo}>
+                <span className={styles.productCategory}>Électrique</span>
+                <h4>Robot Pâtissier Multifonction</h4>
+                <span className={styles.productPrice}>450.00 €</span>
+              </div>
+            </Link>
+          </div>
+          
+          <div className={styles.centerAction}>
+            <Link to="/catalogue" className="btn btn-outline">Voir tout le catalogue</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Reassurance Banner */}
+      <section className={styles.reassurance}>
+        <div className="container">
+          <div className={styles.reassuranceGrid}>
+            <div className={styles.reassuranceItem}>
+              <div className={styles.iconCircle}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+              </div>
+              <h3>Livraison Rapide</h3>
+              <p>Expédition sous 24/48h pour les professionnels.</p>
+            </div>
+            
+            <div className={styles.reassuranceItem}>
+              <div className={styles.iconCircle}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </div>
+              <h3>Paiement Sécurisé</h3>
+              <p>Transactions 100% sécurisées via Stripe.</p>
+            </div>
+            
+            <div className={styles.reassuranceItem}>
+              <div className={styles.iconCircle}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </div>
+              <h3>Qualité Pro</h3>
+              <p>Matériel garanti et approuvé par les chefs.</p>
             </div>
           </div>
         </div>

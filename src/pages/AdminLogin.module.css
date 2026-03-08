@@ -1,0 +1,104 @@
+.loginPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface-alt);
+  padding: var(--space-4);
+}
+
+.loginCard {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  width: 100%;
+  max-width: 450px;
+  box-shadow: var(--shadow-lg);
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.brandName {
+  display: block;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+  color: var(--color-primary);
+  margin-bottom: var(--space-2);
+}
+
+.adminBadge {
+  display: inline-block;
+  background-color: var(--color-accent);
+  color: white;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.inputGroup label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.inputGroup input {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  transition: border-color var(--transition-fast);
+}
+
+.inputGroup input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.inputError {
+  border-color: #c62828 !important;
+}
+
+.errorMessage {
+  color: #c62828;
+  font-size: 0.85rem;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: var(--space-3);
+}
+
+.backLink {
+  margin-top: var(--space-6);
+  text-align: center;
+}
+
+.backLink button {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  transition: color var(--transition-fast);
+}
+
+.backLink button:hover {
+  color: var(--color-primary);
+}

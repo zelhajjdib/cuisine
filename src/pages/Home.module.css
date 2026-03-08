@@ -92,7 +92,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-6);
 }
 
@@ -100,7 +100,7 @@
   position: relative;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  height: 400px;
+  height: 350px;
   transition: transform var(--transition-normal);
   cursor: pointer;
   box-shadow: var(--shadow-md);
@@ -129,6 +129,10 @@
 
 .card:nth-child(3) .cardImage {
   background-image: url('https://images.unsplash.com/photo-1585515320310-259814833e62?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
+}
+
+.card:nth-child(4) .cardImage {
+  background-image: url('https://images.unsplash.com/photo-1580928224581-2287233261a8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80');
 }
 
 .card:hover .cardImage {
@@ -176,6 +180,123 @@
   opacity: 1;
 }
 
+/* Best Sellers */
+.bestSellers {
+  padding: var(--space-8) 0 var(--space-12) 0;
+  background-color: var(--color-bg);
+}
+
+.productCarousel {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+}
+
+.productCard {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+}
+
+.productCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+.productImage {
+  height: 250px;
+  background-size: cover;
+  background-position: center;
+}
+
+.productInfo {
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.productCategory {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  letter-spacing: 1.5px;
+  margin-bottom: var(--space-2);
+  display: block;
+}
+
+.productInfo h4 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  margin-bottom: var(--space-3);
+  color: var(--color-primary);
+  line-height: 1.3;
+}
+
+.productPrice {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--color-accent);
+}
+
+.centerAction {
+  display: flex;
+  justify-content: center;
+}
+
+/* Reassurance Strip */
+.reassurance {
+  background-color: var(--color-primary);
+  color: white;
+  padding: var(--space-8) 0;
+}
+
+.reassuranceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.reassuranceItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.iconCircle {
+  width: 64px;
+  height: 64px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+  color: var(--color-accent);
+  transition: transform var(--transition-normal);
+}
+
+.reassuranceItem:hover .iconCircle {
+  transform: scale(1.1);
+  background-color: rgba(198, 168, 124, 0.2); 
+}
+
+.reassuranceItem h3 {
+  color: white;
+  font-size: 1.2rem;
+  margin-bottom: var(--space-2);
+}
+
+.reassuranceItem p {
+  color: #a0a0a0;
+  font-size: 0.95rem;
+  max-width: 250px;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .title {
@@ -200,5 +321,11 @@
   
   .card {
     height: 300px;
+  }
+
+  .productCarousel,
+  .reassuranceGrid {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
   }
 }
