@@ -31,7 +31,7 @@
   
   /* Layout */
   --container-max-width: 1200px;
-  --header-height: 80px;
+  --header-height: 85px;
 
   /* Shadows (Soft, modern glassmorphism aesthetic) */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);

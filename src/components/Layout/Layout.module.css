@@ -34,6 +34,7 @@
   letter-spacing: 2px;
   color: var(--color-primary);
   text-transform: uppercase;
+  white-space: nowrap; /* Prevent logo text from breaking into two lines */
 }
 
 .nav {
@@ -241,6 +242,11 @@
   
   .mobileMenuBtn {
     display: block;
+    margin-right: var(--space-2);
+  }
+
+  .brandName {
+    font-size: 1.3rem; /* Slightly smaller on medium screens */
   }
 
   /* Slide-in Mobile Menu */
@@ -278,5 +284,13 @@
   
   .navLink::after {
     display: none;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .brandName {
+    font-size: 1.1rem;
+    letter-spacing: 1px;
   }
 }
