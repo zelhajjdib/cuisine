@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import Home from './pages/Home';
 import Catalogue from './pages/Catalogue';
@@ -16,7 +16,7 @@ function App() {
     <AuthProvider>
       <ProductProvider>
         <CartProvider>
-        <BrowserRouter basename="/cuisine">
+        <HashRouter>
           <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
@@ -29,7 +29,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
       </CartProvider>
       </ProductProvider>
     </AuthProvider>
