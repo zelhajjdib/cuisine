@@ -1,30 +1,65 @@
-import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
+import { useSearch } from '../../contexts/SearchContext';
 import styles from './Layout.module.css';
 
 const Layout = () => {
   const { cartTotalItems } = useCart();
+  const { triggerSearch } = useSearch();
+  const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const handleSearchClick = () => {
+    navigate('/catalogue');
+    // Ensure the state updates slightly after navigation starts 
+    // so the Catalogue page has time to mount and catch the effect
+    setTimeout(() => {
+      triggerSearch();
+    }, 50);
+  };
 
   return (
     <div className={styles.layout}>
       <header className={styles.header}>
         <div className={`container ${styles.headerContent}`}>
+          {/* Hamburger Menu Button (visible only on mobile) */}
+          <button 
+            className={styles.mobileMenuBtn} 
+            onClick={toggleMobileMenu}
+            aria-label="Menu"
+          >
+            {isMobileMenuOpen ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            )}
+          </button>
+
           <div className={styles.logo}>
             {/* The user will provide the logo. For now, an elegant text fallback */}
             <span className={styles.brandName}>LA CAVERNE DU PRO</span>
           </div>
           
-          <nav className={styles.nav}>
+          <nav className={`${styles.nav} ${isMobileMenuOpen ? styles.navOpen : ''}`}>
             <ul className={styles.navList}>
-              <li><Link to="/" className={styles.navLink}>Accueil</Link></li>
-              <li><Link to="/catalogue" className={styles.navLink}>Catalogue</Link></li>
-              <li><Link to="/contact" className={styles.navLink}>Contact</Link></li>
+              <li><Link to="/" className={styles.navLink} onClick={toggleMobileMenu}>Accueil</Link></li>
+              <li><Link to="/catalogue" className={styles.navLink} onClick={toggleMobileMenu}>Catalogue</Link></li>
+              <li><Link to="/contact" className={styles.navLink} onClick={toggleMobileMenu}>Contact</Link></li>
             </ul>
           </nav>
 
           <div className={styles.actions}>
-            <button className={styles.iconButton} aria-label="Recherche">
+            {/* Search Toggle Button */}
+            <button 
+              className={styles.iconButton} 
+              aria-label="Recherche"
+              onClick={handleSearchClick}
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>
             <Link to="/panier" className={styles.iconButton} aria-label="Panier">

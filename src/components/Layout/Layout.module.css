@@ -42,6 +42,15 @@
   justify-content: center;
 }
 
+.mobileMenuBtn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: var(--space-2);
+}
+
 .navList {
   display: flex;
   gap: var(--space-6);
@@ -172,14 +181,102 @@
   font-size: 0.85rem;
 }
 
+/* Search Dropdown Animation */
+.searchDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  padding: 0;
+  height: 0;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+}
+
+.searchDropdown.open {
+  padding: var(--space-4) 0;
+  height: auto;
+  opacity: 1;
+}
+
+.searchForm {
+  display: flex;
+  gap: var(--space-4);
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.searchInputDropdown {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  font-size: 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: border-color var(--transition-fast);
+}
+
+.searchInputDropdown:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.searchSubmitBtn {
+  padding: 0 var(--space-6);
+}
+
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 850px) {
   .footerGrid {
     grid-template-columns: 1fr;
     gap: var(--space-6);
   }
   
+  .mobileMenuBtn {
+    display: block;
+  }
+
+  /* Slide-in Mobile Menu */
   .nav {
-    display: none; /* Hide nav on mobile for now, to be replaced with a hamburger menu */
+    position: fixed;
+    top: var(--header-height);
+    left: -100%;
+    width: 250px;
+    height: calc(100vh - var(--header-height));
+    background-color: var(--color-surface);
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: var(--space-6);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 90;
+  }
+
+  .nav.navOpen {
+    left: 0;
+  }
+
+  .navList {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .navLink {
+    font-size: 1.1rem;
+    display: block;
+    width: 100%;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-3);
+  }
+  
+  .navLink::after {
+    display: none;
   }
 }

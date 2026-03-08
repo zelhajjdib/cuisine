@@ -11,11 +11,13 @@ import AdminDashboard from './pages/AdminDashboard';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProductProvider } from './contexts/ProductContext';
+import { SearchProvider } from './contexts/SearchContext';
 
 function App() {
   return (
     <AuthProvider>
       <ProductProvider>
+        <SearchProvider>
         <CartProvider>
         <HashRouter>
           <Routes>
@@ -31,8 +33,9 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           
         </Routes>
-      </HashRouter>
-      </CartProvider>
+        </HashRouter>
+        </CartProvider>
+        </SearchProvider>
       </ProductProvider>
     </AuthProvider>
   );

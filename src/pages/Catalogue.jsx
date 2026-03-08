@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
+import { useSearch } from '../contexts/SearchContext';
 import styles from './Catalogue.module.css';
 
 const categories = ['Toutes', 'Coutellerie', 'Cuisson', 'Électroménager', 'Accessoires'];
@@ -9,12 +10,23 @@ const categories = ['Toutes', 'Coutellerie', 'Cuisson', 'Électroménager', 'Acc
 const Catalogue = () => {
   const { addToCart } = useCart();
   const { products } = useProducts();
+  const { globalSearchQuery, setGlobalSearchQuery, shouldFocusSearch, clearSearchFocus } = useSearch();
   const [activeCategory, setActiveCategory] = useState('Toutes');
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    if (shouldFocusSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+      clearSearchFocus();
+      // Scroll to avoid banner covering it
+      window.scrollTo({ top: 300, behavior: 'smooth' });
+    }
+  }, [shouldFocusSearch, clearSearchFocus]);
 
   const filteredProducts = products.filter(product => {
     const matchesCategory = activeCategory === 'Toutes' || product.category === activeCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = product.name.toLowerCase().includes(globalSearchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -34,10 +46,11 @@ const Catalogue = () => {
           <div className={styles.filterGroup}>
             <h3>Recherche</h3>
             <input 
+              ref={searchInputRef}
               type="text" 
               placeholder="Chercher un équipement..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={globalSearchQuery}
+              onChange={(e) => setGlobalSearchQuery(e.target.value)}
               className={styles.searchInput}
             />
           </div>
@@ -96,7 +109,7 @@ const Catalogue = () => {
               <p>Aucun produit ne correspond à votre recherche.</p>
               <button 
                 className="btn btn-outline" 
-                onClick={() => {setSearchQuery(''); setActiveCategory('Toutes')}}
+                onClick={() => {setGlobalSearchQuery(''); setActiveCategory('Toutes')}}
                 style={{ marginTop: '1rem' }}
               >
                 Réinitialiser les filtres
