@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useCart } from '../contexts/CartContext';
 import styles from './ProductDetail.module.css';
 
 // We reuse the same mock data for now. In a real app this would come from a Supabase fetch
@@ -12,13 +13,21 @@ const mockProducts = [
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
 
   // In real life, find would be replaced by an API call based on ID
   const product = mockProducts.find(p => p.id === parseInt(id || '1')) || mockProducts[0];
 
   const handleDecrease = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
   const handleIncrease = () => setQuantity(prev => (prev < product.stock ? prev + 1 : prev));
+
+  const handleAddToCart = () => {
+    addToCart(product, quantity);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
 
   return (
     <div className={styles.productContainer}>
@@ -66,8 +75,9 @@ const ProductDetail = () => {
               <button 
                 className={`btn btn-accent ${styles.addToCartBtn}`}
                 disabled={product.stock === 0}
+                onClick={handleAddToCart}
               >
-                Ajouter au panier
+                {added ? 'Ajouté !' : 'Ajouter au panier'}
               </button>
             </div>
             
