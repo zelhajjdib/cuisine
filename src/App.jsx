@@ -16,7 +16,7 @@ function App() {
     <AuthProvider>
       <ProductProvider>
         <CartProvider>
-        <BrowserRouter>
+        <BrowserRouter basename="/cuisine">
           <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
