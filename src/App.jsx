@@ -9,11 +9,13 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { ProductProvider } from './contexts/ProductContext';
 
 function App() {
   return (
     <AuthProvider>
-      <CartProvider>
+      <ProductProvider>
+        <CartProvider>
         <BrowserRouter>
           <Routes>
           <Route path="/" element={<Layout />}>
@@ -29,6 +31,7 @@ function App() {
         </Routes>
       </BrowserRouter>
       </CartProvider>
+      </ProductProvider>
     </AuthProvider>
   );
 }

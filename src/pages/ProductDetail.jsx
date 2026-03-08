@@ -1,24 +1,23 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { useProducts } from '../contexts/ProductContext';
 import styles from './ProductDetail.module.css';
-
-// We reuse the same mock data for now. In a real app this would come from a Supabase fetch
-const mockProducts = [
-  { id: 1, name: 'Couteau de Chef Japonais 20cm', category: 'Coutellerie', price: 129.99, image: 'https://images.unsplash.com/photo-1593618998160-e34014e67546?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', description: 'Acier damas 67 couches, manche en bois d\'olivier. Idéal pour toutes les découpes de précision en cuisine professionnelle.', stock: 12 },
-  { id: 2, name: 'Batterie de Cuisine Inox 5 Pièces', category: 'Cuisson', price: 299.00, image: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', description: 'Qualité professionnelle, compatible tous feux dont induction. Acier inoxydable 18/10 pour une durabilité exceptionnelle.', stock: 5 },
-  { id: 3, name: 'Robot Pâtissier Multifonction', category: 'Électroménager', price: 450.00, image: 'https://images.unsplash.com/photo-1585515320310-259814833e62?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', description: 'Moteur professionnel 1200W, bol inox 5L. Le compagnon indispensable pour des pâtisseries réussies à tous les coups.', stock: 3 },
-];
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { products } = useProducts();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
-  // In real life, find would be replaced by an API call based on ID
-  const product = mockProducts.find(p => p.id === parseInt(id || '1')) || mockProducts[0];
+  // Find the dynamically populated product instead of mocked
+  const product = products.find(p => p.id === parseInt(id || '1'));
+
+  if (!product) {
+    return <div className="container" style={{padding: '100px 0'}}>Produit introuvable.</div>;
+  }
 
   const handleDecrease = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
   const handleIncrease = () => setQuantity(prev => (prev < product.stock ? prev + 1 : prev));

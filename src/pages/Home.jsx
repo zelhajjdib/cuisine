@@ -1,9 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useProducts } from '../contexts/ProductContext';
 import styles from './Home.module.css';
 import { ArrowRight } from 'lucide-react';
 
 const Home = () => {
+  const { products } = useProducts();
+  
+  // Get 3 best sellers (mock logic: first 3 products for now)
+  const bestSellers = products.slice(0, 3);
+
   return (
     <div className={styles.home}>
       {/* Hero Section */}
@@ -75,32 +81,19 @@ const Home = () => {
           </div>
           
           <div className={styles.productCarousel}>
-            <Link to="/produit/1" className={styles.productCard}>
-              <div className={styles.productImage} style={{ backgroundImage: `url('https://images.unsplash.com/photo-1593618998160-e34014e67546?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')` }}></div>
-              <div className={styles.productInfo}>
-                <span className={styles.productCategory}>Coutellerie</span>
-                <h4>Couteau de Chef Japonais 20cm</h4>
-                <span className={styles.productPrice}>129.99 €</span>
-              </div>
-            </Link>
-
-            <Link to="/produit/2" className={styles.productCard}>
-              <div className={styles.productImage} style={{ backgroundImage: `url('https://images.unsplash.com/photo-1584992236310-6edddc08acff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')` }}></div>
-              <div className={styles.productInfo}>
-                <span className={styles.productCategory}>Cuisson</span>
-                <h4>Batterie de Cuisine Inox 5 Pièces</h4>
-                <span className={styles.productPrice}>299.00 €</span>
-              </div>
-            </Link>
-
-            <Link to="/produit/3" className={styles.productCard}>
-              <div className={styles.productImage} style={{ backgroundImage: `url('https://images.unsplash.com/photo-1585515320310-259814833e62?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')` }}></div>
-              <div className={styles.productInfo}>
-                <span className={styles.productCategory}>Électrique</span>
-                <h4>Robot Pâtissier Multifonction</h4>
-                <span className={styles.productPrice}>450.00 €</span>
-              </div>
-            </Link>
+            {bestSellers.map(product => (
+              <Link to={`/produit/${product.id}`} key={product.id} className={styles.productCard}>
+                <div 
+                  className={styles.productImage} 
+                  style={{ backgroundImage: `url(${product.image})` }}
+                ></div>
+                <div className={styles.productInfo}>
+                  <span className={styles.productCategory}>{product.category}</span>
+                  <h4>{product.name}</h4>
+                  <span className={styles.productPrice}>{product.price.toFixed(2)} €</span>
+                </div>
+              </Link>
+            ))}
           </div>
           
           <div className={styles.centerAction}>

@@ -1,26 +1,18 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { useProducts } from '../contexts/ProductContext';
 import styles from './Catalogue.module.css';
-
-// Mock data based on lacavernedupro.fr
-const mockProducts = [
-  { id: 1, name: 'Couteau de Chef Japonais 20cm', category: 'Coutellerie', price: 129.99, image: 'https://images.unsplash.com/photo-1593618998160-e34014e67546?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80', description: 'Acier damas 67 couches, manche en bois d\'olivier.' },
-  { id: 2, name: 'Batterie de Cuisine Inox 5 Pièces', category: 'Cuisson', price: 299.00, image: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80', description: 'Qualité professionnelle, compatible tous feux dont induction.' },
-  { id: 3, name: 'Robot Pâtissier Multifonction', category: 'Électroménager', price: 450.00, image: 'https://images.unsplash.com/photo-1585515320310-259814833e62?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80', description: 'Moteur professionnel 1200W, bol inox 5L.' },
-  { id: 4, name: 'Planche à Découper Billot', category: 'Accessoires', price: 89.50, image: 'https://images.unsplash.com/photo-1601001815894-ea1f16cb0c24?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80', description: 'Bois de bout de noyer massif, fabrication artisanale.' },
-  { id: 5, name: 'Poêle En Fonte Émaillée 28cm', category: 'Cuisson', price: 145.00, image: 'https://images.unsplash.com/photo-1546875938-16e625d97f37?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80', description: 'Répartition parfaite de la chaleur, idéale pour saisir.' },
-  { id: 6, name: 'Mallette Couteaux Pro 12 Pièces', category: 'Coutellerie', price: 350.00, image: 'https://images.unsplash.com/photo-1574269909862-7e1d70bb8078?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80', description: 'Kit complet pour apprentis et chefs confirmés.' },
-];
 
 const categories = ['Toutes', 'Coutellerie', 'Cuisson', 'Électroménager', 'Accessoires'];
 
 const Catalogue = () => {
   const { addToCart } = useCart();
+  const { products } = useProducts();
   const [activeCategory, setActiveCategory] = useState('Toutes');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredProducts = mockProducts.filter(product => {
+  const filteredProducts = products.filter(product => {
     const matchesCategory = activeCategory === 'Toutes' || product.category === activeCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
