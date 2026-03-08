@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 const SearchContext = createContext();
 
@@ -14,13 +14,13 @@ export const SearchProvider = ({ children }) => {
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
 
-  const triggerSearch = () => {
+  const triggerSearch = useCallback(() => {
     setShouldFocusSearch(true);
-  };
+  }, []);
 
-  const clearSearchFocus = () => {
+  const clearSearchFocus = useCallback(() => {
     setShouldFocusSearch(false);
-  };
+  }, []);
 
   return (
     <SearchContext.Provider value={{ 

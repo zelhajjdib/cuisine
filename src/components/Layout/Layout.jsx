@@ -15,12 +15,8 @@ const Layout = () => {
   };
 
   const handleSearchClick = () => {
+    triggerSearch();
     navigate('/catalogue');
-    // Ensure the state updates slightly after navigation starts 
-    // so the Catalogue page has time to mount and catch the effect
-    setTimeout(() => {
-      triggerSearch();
-    }, 50);
   };
 
   return (
