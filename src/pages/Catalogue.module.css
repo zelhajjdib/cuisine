@@ -178,17 +178,6 @@
   color: var(--color-primary);
 }
 
-.addToCartBtn {
-  color: var(--color-text-muted);
-  transition: color var(--transition-fast), transform var(--transition-fast);
-  padding: var(--space-1);
-}
-
-.addToCartBtn:hover {
-  color: var(--color-accent);
-  transform: scale(1.1);
-}
-
 .noResults {
   grid-column: 1 / -1;
   text-align: center;

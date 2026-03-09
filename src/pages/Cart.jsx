@@ -1,11 +1,34 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { useProducts } from '../contexts/ProductContext';
 import styles from './Cart.module.css';
 
 const Cart = () => {
-  const { cartItems, removeFromCart, updateQuantity, cartTotalAmount } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, cartTotalAmount, clearCart } = useCart();
+  const { products, updateProduct } = useProducts();
   const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    // Simulate stock deduction since we don't have a real DB/Stripe yet
+    cartItems.forEach(cartItem => {
+      // Find the real item in our "database"
+      const realProduct = products.find(p => p.id === cartItem.id);
+      if (realProduct) {
+        // Calculate new stock (preventing negative values just in case)
+        const newStock = Math.max(0, realProduct.stock - cartItem.quantity);
+        // Dispatch the global update to reduce the stock everywhere
+        updateProduct(realProduct.id, { stock: newStock });
+      }
+    });
+
+    // Alert simulation
+    alert("Paiement fictif validé ! Le stock de vos articles a été déduit sur tout le site (côté client et Admin). Vos produits arrivent bientôt !");
+    
+    // Clear cart and go home
+    clearCart();
+    navigate('/');
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -85,8 +108,12 @@ const Cart = () => {
                 <span>{cartTotalAmount.toFixed(2)} €</span>
               </div>
               
-              <button className="btn btn-accent" style={{width: '100%'}}>
-                Procéder au paiement
+              <button 
+                className="btn btn-accent" 
+                style={{width: '100%'}}
+                onClick={handleCheckout}
+              >
+                Procéder au paiement (Simulation)
               </button>
 
               <div className={styles.securePayment}>
