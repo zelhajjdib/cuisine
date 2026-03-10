@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
 import { useSearch } from '../contexts/SearchContext';
+import { CATEGORIES } from '../constants/categories';
 import styles from './Catalogue.module.css';
-
-const categories = ['Toutes', 'Coutellerie', 'Cuisson', 'Électroménager', 'Accessoires'];
 
 const Catalogue = () => {
   const { addToCart } = useCart();
@@ -58,7 +57,7 @@ const Catalogue = () => {
           <div className={styles.filterGroup}>
             <h3>Catégories</h3>
             <ul className={styles.categoryList}>
-              {categories.map(cat => (
+              {CATEGORIES.map(cat => (
                 <li key={cat}>
                   <button 
                     className={`${styles.categoryBtn} ${activeCategory === cat ? styles.active : ''}`}

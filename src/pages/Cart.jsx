@@ -2,14 +2,27 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
+import { useOrders } from '../contexts/OrderContext';
 import styles from './Cart.module.css';
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, cartTotalAmount, clearCart } = useCart();
   const { products, updateProduct } = useProducts();
+  const { addOrder } = useOrders();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
+    // Collect order data before clearing the cart
+    const orderData = {
+      items: [...cartItems],
+      totalAmount: cartTotalAmount,
+      status: 'En attente',
+      customer: {
+        email: 'client.demo@example.com', // Simulated typical customer info
+        name: 'Client Test'
+      }
+    };
+
     // Simulate stock deduction since we don't have a real DB/Stripe yet
     cartItems.forEach(cartItem => {
       // Find the real item in our "database"
@@ -22,8 +35,11 @@ const Cart = () => {
       }
     });
 
+    // Save the order to OrderContext
+    addOrder(orderData);
+
     // Alert simulation
-    alert("Paiement fictif validé ! Le stock de vos articles a été déduit sur tout le site (côté client et Admin). Vos produits arrivent bientôt !");
+    alert(`Paiement fictif validé ! L'administrateur peut maintenant voir votre commande de ${cartTotalAmount.toFixed(2)}€ dans l'Espace Admin.`);
     
     // Clear cart and go home
     clearCart();

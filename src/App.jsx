@@ -12,6 +12,7 @@ import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProductProvider } from './contexts/ProductContext';
 import { SearchProvider } from './contexts/SearchContext';
+import { OrderProvider } from './contexts/OrderContext';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
     <AuthProvider>
       <ProductProvider>
         <SearchProvider>
+        <OrderProvider>
         <CartProvider>
         <HashRouter>
           <ScrollToTop />
@@ -37,6 +39,7 @@ function App() {
         </Routes>
         </HashRouter>
         </CartProvider>
+        </OrderProvider>
         </SearchProvider>
       </ProductProvider>
     </AuthProvider>

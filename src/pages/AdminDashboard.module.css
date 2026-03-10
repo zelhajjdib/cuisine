@@ -199,7 +199,10 @@
   background-color: var(--color-surface);
   border-radius: var(--radius-lg);
   width: 100%;
-  max-width: 500px;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: var(--shadow-float);
   overflow: hidden;
 }
@@ -236,6 +239,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  overflow-y: auto;
+  flex: 1;
 }
 
 .formGroup {
@@ -277,7 +282,7 @@
 
 .formRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-4);
 }
 
@@ -296,6 +301,59 @@
 .saveBtn {
   padding: var(--space-2) var(--space-4);
   font-size: 0.95rem;
+}
+
+/* Nouvelles Classes Prestashop Style */
+.formSection {
+  border: 1px solid var(--color-border);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: #fafafa;
+}
+
+.formSection h3 {
+  margin-top: 0;
+  margin-bottom: var(--space-4);
+  font-size: 1.1rem;
+  color: var(--color-primary);
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: var(--space-2);
+}
+
+.radioGroup {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.radioGroup label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.95rem;
+  font-weight: normal;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.checkboxGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.checkboxGroup input[type="checkbox"] {
+  width: auto;
+  cursor: pointer;
+}
+
+.checkboxGroup label {
+  font-size: 0.95rem;
+  font-weight: normal;
+  color: var(--color-text);
+  cursor: pointer;
+  margin: 0;
 }
 
 @media (max-width: 1024px) {
