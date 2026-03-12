@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import { useSearch } from '../../contexts/SearchContext';
@@ -9,6 +9,17 @@ const Layout = () => {
   const { triggerSearch } = useSearch();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [cartAnimating, setCartAnimating] = useState(false);
+  const prevCartItems = useRef(cartTotalItems);
+
+  useEffect(() => {
+    if (cartTotalItems > prevCartItems.current) {
+      setCartAnimating(true);
+      const timer = setTimeout(() => setCartAnimating(false), 650);
+      return () => clearTimeout(timer);
+    }
+    prevCartItems.current = cartTotalItems;
+  }, [cartTotalItems]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -58,10 +69,16 @@ const Layout = () => {
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </button>
-            <Link to="/panier" className={styles.iconButton} aria-label="Panier">
+            <Link
+              to="/panier"
+              className={`${styles.iconButton} ${cartAnimating ? styles.cartBump : ''}`}
+              aria-label="Panier"
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
               {cartTotalItems > 0 && (
-                <span className={styles.cartBadge}>{cartTotalItems}</span>
+                <span className={`${styles.cartBadge} ${cartAnimating ? styles.badgePop : ''}`}>
+                  {cartTotalItems}
+                </span>
               )}
             </Link>
           </div>

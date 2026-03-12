@@ -39,35 +39,34 @@ const Home = () => {
             <p>Tout ce dont vous avez besoin pour équiper votre cuisine avec le plus grand soin.</p>
           </div>
           <div className={styles.grid}>
-            {/* These will be replaced by dynamic categories */}
-            <div className={styles.card}>
+            <Link to="/catalogue" className={styles.card}>
               <div className={styles.cardImage}></div>
               <div className={styles.cardContent}>
                 <h3>Coutellerie d'Exception</h3>
-                <Link to="/catalogue" className={styles.link}>Explorer</Link>
+                <span className={styles.link}>Explorer</span>
               </div>
-            </div>
-            <div className={styles.card}>
+            </Link>
+            <Link to="/catalogue" className={styles.card}>
               <div className={styles.cardImage}></div>
               <div className={styles.cardContent}>
                 <h3>Cuisson & Inox</h3>
-                <Link to="/catalogue" className={styles.link}>Explorer</Link>
+                <span className={styles.link}>Explorer</span>
               </div>
-            </div>
-            <div className={styles.card}>
+            </Link>
+            <Link to="/catalogue" className={styles.card}>
               <div className={styles.cardImage}></div>
               <div className={styles.cardContent}>
                 <h3>Matériel Électrique</h3>
-                <Link to="/catalogue" className={styles.link}>Explorer</Link>
+                <span className={styles.link}>Explorer</span>
               </div>
-            </div>
-            <div className={styles.card}>
+            </Link>
+            <Link to="/catalogue" className={styles.card}>
               <div className={styles.cardImage}></div>
               <div className={styles.cardContent}>
                 <h3>Plonge & Entretien</h3>
-                <Link to="/catalogue" className={styles.link}>Explorer</Link>
+                <span className={styles.link}>Explorer</span>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </section>
