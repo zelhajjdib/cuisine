@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
 import { useOrders } from '../contexts/OrderContext';
+import CheckoutModal from '../components/CheckoutModal/CheckoutModal';
 import styles from './Cart.module.css';
+
+// Remplacer par votre clé publique Stripe (tableau de bord Stripe > Développeurs > Clés API)
+const stripePromise = loadStripe('pk_test_VOTRE_CLE_PUBLIQUE_STRIPE_ICI');
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, cartTotalAmount, clearCart } = useCart();
@@ -11,32 +17,14 @@ const Cart = () => {
   const { addOrder } = useOrders();
   const navigate = useNavigate();
 
-  const [customerName, setCustomerName] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [formError, setFormError] = useState('');
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  const handleCheckout = () => {
-    if (!customerName.trim() || !customerEmail.trim()) {
-      setFormError('Veuillez remplir votre nom et votre email pour continuer.');
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(customerEmail)) {
-      setFormError('Veuillez entrer une adresse email valide.');
-      return;
-    }
-    setFormError('');
-
+  const handleCheckoutSuccess = (customerInfo) => {
     const orderData = {
       items: [...cartItems],
       totalAmount: cartTotalAmount,
       status: 'En attente',
-      customer: {
-        name: customerName.trim(),
-        email: customerEmail.trim(),
-        phone: customerPhone.trim()
-      }
+      customer: customerInfo,
     };
 
     cartItems.forEach(cartItem => {
@@ -48,10 +36,12 @@ const Cart = () => {
     });
 
     addOrder(orderData);
-
-    alert(`Commande validée ! Votre commande de ${cartTotalAmount.toFixed(2)} € a bien été enregistrée. L'administrateur peut maintenant la traiter.`);
+    setIsCheckoutOpen(false);
     clearCart();
     navigate('/');
+    setTimeout(() => {
+      alert(`Commande confirmée ! Vous recevrez un email de confirmation à ${customerInfo.email}.\nL'administrateur va traiter votre commande.`);
+    }, 100);
   };
 
   if (cartItems.length === 0) {
@@ -74,7 +64,7 @@ const Cart = () => {
         <h1 className={styles.title}>Votre Panier</h1>
 
         <div className={styles.cartLayout}>
-          {/* Items List */}
+          {/* Liste des articles */}
           <div className={styles.itemsSection}>
             {cartItems.map((item) => (
               <div key={item.id} className={styles.cartItem}>
@@ -113,45 +103,8 @@ const Cart = () => {
             ))}
           </div>
 
-          {/* Checkout Summary */}
+          {/* Résumé commande */}
           <div className={styles.summarySection}>
-            {/* Customer Info Form */}
-            <div className={styles.customerCard}>
-              <h3>Vos coordonnées</h3>
-              <p className={styles.customerNote}>Ces informations seront transmises avec votre commande.</p>
-              <div className={styles.customerField}>
-                <label htmlFor="customerName">Nom complet *</label>
-                <input
-                  type="text"
-                  id="customerName"
-                  value={customerName}
-                  onChange={e => setCustomerName(e.target.value)}
-                  placeholder="Jean Dupont"
-                />
-              </div>
-              <div className={styles.customerField}>
-                <label htmlFor="customerEmail">Email *</label>
-                <input
-                  type="email"
-                  id="customerEmail"
-                  value={customerEmail}
-                  onChange={e => setCustomerEmail(e.target.value)}
-                  placeholder="jean@exemple.fr"
-                />
-              </div>
-              <div className={styles.customerField}>
-                <label htmlFor="customerPhone">Téléphone</label>
-                <input
-                  type="tel"
-                  id="customerPhone"
-                  value={customerPhone}
-                  onChange={e => setCustomerPhone(e.target.value)}
-                  placeholder="06 00 00 00 00"
-                />
-              </div>
-              {formError && <p className={styles.formError}>{formError}</p>}
-            </div>
-
             <div className={styles.summaryCard}>
               <h3>Récapitulatif</h3>
 
@@ -171,10 +124,10 @@ const Cart = () => {
 
               <button
                 className="btn btn-accent"
-                style={{width: '100%'}}
-                onClick={handleCheckout}
+                style={{ width: '100%' }}
+                onClick={() => setIsCheckoutOpen(true)}
               >
-                Procéder au paiement (Simulation)
+                Procéder au paiement
               </button>
 
               <div className={styles.securePayment}>
@@ -185,6 +138,17 @@ const Cart = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de paiement Stripe */}
+      <Elements stripe={stripePromise}>
+        <CheckoutModal
+          isOpen={isCheckoutOpen}
+          onClose={() => setIsCheckoutOpen(false)}
+          cartItems={cartItems}
+          cartTotalAmount={cartTotalAmount}
+          onSuccess={handleCheckoutSuccess}
+        />
+      </Elements>
     </div>
   );
 };
