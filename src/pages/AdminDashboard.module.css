@@ -570,41 +570,237 @@
   display: inline-block;
 }
 
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Tablette (≤ 1024px)
+═══════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .adminLayout {
     flex-direction: column;
   }
-  
+
   .sidebar {
     width: 100%;
     flex-direction: row;
     align-items: center;
     padding: 0 var(--space-4);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
-  
+
   .sidebarHeader {
     border: none;
-    padding: var(--space-4) 0;
+    padding: var(--space-3) 0;
+    flex-shrink: 0;
   }
-  
+
+  .sidebarHeader h2 {
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+
   .sidebarNav {
     flex-direction: row;
-    padding: 0 var(--space-4);
+    padding: 0 var(--space-3);
+    flex: 1;
   }
-  
-  .sidebarNav a {
+
+  .sidebarNav button {
     border-left: none;
     border-bottom: 3px solid transparent;
+    padding: var(--space-3) var(--space-3);
+    width: auto;
   }
-  
-  .sidebarNav a.active {
+
+  .sidebarNav button.active {
     border-left-color: transparent;
     border-bottom-color: var(--color-accent);
   }
-  
+
   .sidebarFooter {
     border: none;
     padding: 0;
     margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .mainContent {
+    padding: var(--space-6) var(--space-4);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Mobile (≤ 768px)
+═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .sidebarHeader h2 {
+    display: none; /* titre masqué sur petit écran, gain de place */
+  }
+
+  .sidebarNav {
+    padding: 0 var(--space-1);
+  }
+
+  .sidebarNav button {
+    font-size: 0.85rem;
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .logoutBtn {
+    font-size: 0.82rem;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: var(--radius-sm);
+  }
+
+  .mainContent {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  /* Header page (titre + bouton Ajouter) */
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+
+  .header h1 {
+    font-size: 1.4rem;
+  }
+
+  .addBtn {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Tableau — scroll horizontal */
+  .tableContainer {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 580px;
+  }
+
+  .table th,
+  .table td {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.85rem;
+  }
+
+  .actionButtons {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .editBtn,
+  .deleteBtn {
+    padding: 5px 8px;
+    font-size: 0.8rem;
+  }
+
+  /* Modal — plein écran sur mobile */
+  .modalOverlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modalContent {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .modalHeader {
+    padding: var(--space-4);
+  }
+
+  .modalHeader h2 {
+    font-size: 1.1rem;
+  }
+
+  .modalForm {
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+
+  /* Sections du formulaire */
+  .formSection {
+    padding: var(--space-3);
+  }
+
+  .formSection h3 {
+    font-size: 1rem;
+  }
+
+  /* Grilles de champs → colonne unique */
+  .formRow {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  /* Réduction (€/%) côte à côte — garder sur mobile */
+  .discountRow {
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  /* Radio buttons → colonne */
+  .radioGroup {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  /* Bouton Créer fabricant/fournisseur */
+  .fieldWithCreate {
+    flex-wrap: wrap;
+  }
+
+  .createBtn {
+    flex-grow: 1;
+    text-align: center;
+  }
+
+  .inlineCreate {
+    flex-wrap: wrap;
+  }
+
+  /* Zone upload image */
+  .imageUploadZone {
+    padding: var(--space-4);
+  }
+
+  /* Actions du modal */
+  .modalActions {
+    flex-direction: column-reverse;
+    gap: var(--space-2);
+  }
+
+  .cancelBtn,
+  .saveBtn {
+    width: 100%;
+    text-align: center;
+    padding: var(--space-3);
+  }
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — Très petit (≤ 420px)
+═══════════════════════════════════════════ */
+@media (max-width: 420px) {
+  .table {
+    min-width: 480px;
+  }
+
+  .sidebarNav button {
+    font-size: 0.78rem;
+    padding: var(--space-2) var(--space-1);
+  }
+
+  .logoutBtn {
+    font-size: 0.78rem;
   }
 }
