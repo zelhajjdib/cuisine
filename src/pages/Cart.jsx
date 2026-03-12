@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
@@ -11,37 +11,45 @@ const Cart = () => {
   const { addOrder } = useOrders();
   const navigate = useNavigate();
 
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [formError, setFormError] = useState('');
+
   const handleCheckout = () => {
-    // Collect order data before clearing the cart
+    if (!customerName.trim() || !customerEmail.trim()) {
+      setFormError('Veuillez remplir votre nom et votre email pour continuer.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail)) {
+      setFormError('Veuillez entrer une adresse email valide.');
+      return;
+    }
+    setFormError('');
+
     const orderData = {
       items: [...cartItems],
       totalAmount: cartTotalAmount,
       status: 'En attente',
       customer: {
-        email: 'client.demo@example.com', // Simulated typical customer info
-        name: 'Client Test'
+        name: customerName.trim(),
+        email: customerEmail.trim(),
+        phone: customerPhone.trim()
       }
     };
 
-    // Simulate stock deduction since we don't have a real DB/Stripe yet
     cartItems.forEach(cartItem => {
-      // Find the real item in our "database"
       const realProduct = products.find(p => p.id === cartItem.id);
       if (realProduct) {
-        // Calculate new stock (preventing negative values just in case)
         const newStock = Math.max(0, realProduct.stock - cartItem.quantity);
-        // Dispatch the global update to reduce the stock everywhere
         updateProduct(realProduct.id, { stock: newStock });
       }
     });
 
-    // Save the order to OrderContext
     addOrder(orderData);
 
-    // Alert simulation
-    alert(`Paiement fictif validé ! L'administrateur peut maintenant voir votre commande de ${cartTotalAmount.toFixed(2)}€ dans l'Espace Admin.`);
-    
-    // Clear cart and go home
+    alert(`Commande validée ! Votre commande de ${cartTotalAmount.toFixed(2)} € a bien été enregistrée. L'administrateur peut maintenant la traiter.`);
     clearCart();
     navigate('/');
   };
@@ -64,22 +72,22 @@ const Cart = () => {
     <div className={styles.cartPage}>
       <div className="container">
         <h1 className={styles.title}>Votre Panier</h1>
-        
+
         <div className={styles.cartLayout}>
           {/* Items List */}
           <div className={styles.itemsSection}>
             {cartItems.map((item) => (
               <div key={item.id} className={styles.cartItem}>
-                <div 
+                <div
                   className={styles.itemImage}
                   style={{ backgroundImage: `url(${item.image})` }}
                   onClick={() => navigate(`/produit/${item.id}`)}
                 ></div>
-                
+
                 <div className={styles.itemDetails}>
                   <div className={styles.itemHeader}>
                     <h3 onClick={() => navigate(`/produit/${item.id}`)}>{item.name}</h3>
-                    <button 
+                    <button
                       className={styles.removeBtn}
                       onClick={() => removeFromCart(item.id)}
                       aria-label="Supprimer l'article"
@@ -87,9 +95,9 @@ const Cart = () => {
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                     </button>
                   </div>
-                  
+
                   <div className={styles.itemCategory}>{item.category}</div>
-                  
+
                   <div className={styles.itemFooter}>
                     <div className={styles.quantitySelector}>
                       <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
@@ -107,9 +115,46 @@ const Cart = () => {
 
           {/* Checkout Summary */}
           <div className={styles.summarySection}>
+            {/* Customer Info Form */}
+            <div className={styles.customerCard}>
+              <h3>Vos coordonnées</h3>
+              <p className={styles.customerNote}>Ces informations seront transmises avec votre commande.</p>
+              <div className={styles.customerField}>
+                <label htmlFor="customerName">Nom complet *</label>
+                <input
+                  type="text"
+                  id="customerName"
+                  value={customerName}
+                  onChange={e => setCustomerName(e.target.value)}
+                  placeholder="Jean Dupont"
+                />
+              </div>
+              <div className={styles.customerField}>
+                <label htmlFor="customerEmail">Email *</label>
+                <input
+                  type="email"
+                  id="customerEmail"
+                  value={customerEmail}
+                  onChange={e => setCustomerEmail(e.target.value)}
+                  placeholder="jean@exemple.fr"
+                />
+              </div>
+              <div className={styles.customerField}>
+                <label htmlFor="customerPhone">Téléphone</label>
+                <input
+                  type="tel"
+                  id="customerPhone"
+                  value={customerPhone}
+                  onChange={e => setCustomerPhone(e.target.value)}
+                  placeholder="06 00 00 00 00"
+                />
+              </div>
+              {formError && <p className={styles.formError}>{formError}</p>}
+            </div>
+
             <div className={styles.summaryCard}>
               <h3>Récapitulatif</h3>
-              
+
               <div className={styles.summaryRow}>
                 <span>Sous-total</span>
                 <span>{cartTotalAmount.toFixed(2)} €</span>
@@ -118,14 +163,14 @@ const Cart = () => {
                 <span>Livraison</span>
                 <span>Calculé à l'étape suivante</span>
               </div>
-              
+
               <div className={styles.summaryTotal}>
                 <span>Total estimé</span>
                 <span>{cartTotalAmount.toFixed(2)} €</span>
               </div>
-              
-              <button 
-                className="btn btn-accent" 
+
+              <button
+                className="btn btn-accent"
                 style={{width: '100%'}}
                 onClick={handleCheckout}
               >

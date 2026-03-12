@@ -24,6 +24,7 @@ const Catalogue = () => {
   }, [shouldFocusSearch, clearSearchFocus]);
 
   const filteredProducts = products.filter(product => {
+    if (product.status === false) return false;
     const matchesCategory = activeCategory === 'Toutes' || product.category === activeCategory;
     const matchesSearch = product.name.toLowerCase().includes(globalSearchQuery.toLowerCase());
     return matchesCategory && matchesSearch;

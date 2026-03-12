@@ -6,20 +6,67 @@ import { useOrders } from '../contexts/OrderContext';
 import { CATEGORIES } from '../constants/categories';
 import styles from './AdminDashboard.module.css';
 
-// Filter out "Toutes" for the dropdown since a product cannot literally belong to "Toutes"
 const productCategories = CATEGORIES.filter(c => c !== 'Toutes');
+
+const loadFromStorage = (key, fallback) => {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch {
+    return fallback;
+  }
+};
 
 const AdminDashboard = () => {
   const { isAdmin, logout } = useAuth();
   const navigate = useNavigate();
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const { orders, updateOrderStatus } = useOrders();
-  
-  // States
+
   const [activeTab, setActiveTab] = useState('Produits');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  
+
+  // Fabricants & Fournisseurs dynamiques
+  const [manufacturers, setManufacturers] = useState(() =>
+    loadFromStorage('shop_manufacturers', ['BARTCHER', 'SAMSUNG', 'TEFAL'])
+  );
+  const [suppliers, setSuppliers] = useState(() =>
+    loadFromStorage('shop_suppliers', [])
+  );
+  const [showCreateManufacturer, setShowCreateManufacturer] = useState(false);
+  const [newManufacturerName, setNewManufacturerName] = useState('');
+  const [showCreateSupplier, setShowCreateSupplier] = useState(false);
+  const [newSupplierName, setNewSupplierName] = useState('');
+
+  useEffect(() => {
+    localStorage.setItem('shop_manufacturers', JSON.stringify(manufacturers));
+  }, [manufacturers]);
+
+  useEffect(() => {
+    localStorage.setItem('shop_suppliers', JSON.stringify(suppliers));
+  }, [suppliers]);
+
+  const handleAddManufacturer = () => {
+    const name = newManufacturerName.trim().toUpperCase();
+    if (!name || manufacturers.includes(name)) return;
+    const updated = [...manufacturers, name];
+    setManufacturers(updated);
+    setFormData(prev => ({ ...prev, manufacturer: name }));
+    setNewManufacturerName('');
+    setShowCreateManufacturer(false);
+  };
+
+  const handleAddSupplier = () => {
+    const name = newSupplierName.trim();
+    if (!name || suppliers.includes(name)) return;
+    const updated = [...suppliers, name];
+    setSuppliers(updated);
+    setFormData(prev => ({ ...prev, supplier: name }));
+    setNewSupplierName('');
+    setShowCreateSupplier(false);
+  };
+
   // Form State
   const initialFormState = {
     name: '',
@@ -36,13 +83,15 @@ const AdminDashboard = () => {
     purchasePriceHT: '',
     sellingPriceHT: '',
     taxRate: '20',
-    price: '', 
+    price: '',
     ecoTax: '0.00',
     discount: '0.00',
+    discountPercent: '0',
     availableFrom: '',
     availableTo: '',
     onSale: false,
-    stock: '1', 
+    outOfStockBehavior: 'default',
+    stock: '1',
     inStockMessage: '',
     outOfStockMessage: '',
     summary: '',
@@ -54,47 +103,84 @@ const AdminDashboard = () => {
   };
 
   const [formData, setFormData] = useState(initialFormState);
+  const [imagePreview, setImagePreview] = useState('');
 
-  // Protected Route Check
   useEffect(() => {
-    if (!isAdmin) {
-      navigate('/admin');
-    }
+    if (!isAdmin) navigate('/admin');
   }, [isAdmin, navigate]);
 
-  if (!isAdmin) return null; // Prevent flash before redirect
+  if (!isAdmin) return null;
+
+  const computedPriceTTC = () => {
+    const ht = parseFloat(formData.sellingPriceHT) || 0;
+    const tax = parseFloat(formData.taxRate) || 0;
+    return (ht * (1 + tax / 100)).toFixed(2);
+  };
 
   const openAddModal = () => {
     setEditingProduct(null);
     setFormData(initialFormState);
+    setImagePreview('');
+    setShowCreateManufacturer(false);
+    setShowCreateSupplier(false);
     setIsModalOpen(true);
   };
 
   const openEditModal = (product) => {
     setEditingProduct(product);
-    setFormData({
-      ...initialFormState,
-      ...product
-    });
+    setFormData({ ...initialFormState, ...product });
+    setImagePreview(product.image || '');
+    setShowCreateManufacturer(false);
+    setShowCreateSupplier(false);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setShowCreateManufacturer(false);
+    setShowCreateSupplier(false);
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }));
+    const newValue = type === 'checkbox' ? checked : value;
+
+    setFormData(prev => {
+      const updated = { ...prev, [name]: newValue };
+      // Auto-calcul du prix TTC quand HT ou taxe change
+      if (name === 'sellingPriceHT' || name === 'taxRate') {
+        const ht = parseFloat(name === 'sellingPriceHT' ? newValue : prev.sellingPriceHT) || 0;
+        const tax = parseFloat(name === 'taxRate' ? newValue : prev.taxRate) || 0;
+        updated.price = (ht * (1 + tax / 100)).toFixed(2);
+      }
+      return updated;
+    });
+  };
+
+  const handleImageUpload = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Veuillez sélectionner une image valide.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+      setFormData(prev => ({ ...prev, image: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDragOver = (e) => e.preventDefault();
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageUpload(e.dataTransfer.files[0]);
+    }
   };
 
   const handleSave = (e) => {
     e.preventDefault();
-    
-    // Convert to proper types
     const formattedData = {
       ...formData,
       price: parseFloat(formData.price) || 0,
@@ -103,13 +189,11 @@ const AdminDashboard = () => {
       sellingPriceHT: parseFloat(formData.sellingPriceHT) || 0,
       taxRate: parseFloat(formData.taxRate) || 0,
     };
-    
     if (editingProduct) {
       updateProduct(editingProduct.id, formattedData);
     } else {
       addProduct(formattedData);
     }
-    
     closeModal();
   };
 
@@ -127,14 +211,14 @@ const AdminDashboard = () => {
           <h2>La Caverne Admin</h2>
         </div>
         <nav className={styles.sidebarNav}>
-          <button 
-            className={activeTab === 'Produits' ? styles.active : ''} 
+          <button
+            className={activeTab === 'Produits' ? styles.active : ''}
             onClick={() => setActiveTab('Produits')}
           >
             Produits
           </button>
-          <button 
-            className={activeTab === 'Commandes' ? styles.active : ''} 
+          <button
+            className={activeTab === 'Commandes' ? styles.active : ''}
             onClick={() => setActiveTab('Commandes')}
           >
             Commandes
@@ -165,8 +249,9 @@ const AdminDashboard = () => {
                     <th>ID</th>
                     <th>Nom du Produit</th>
                     <th>Catégorie</th>
-                    <th>Prix</th>
+                    <th>Prix TTC</th>
                     <th>Stock</th>
+                    <th>Statut</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -185,17 +270,20 @@ const AdminDashboard = () => {
                         </span>
                       </td>
                       <td>
+                        <span className={product.status === false ? styles.statusOff : styles.statusOn}>
+                          {product.status === false ? 'Désactivé' : 'Activé'}
+                        </span>
+                      </td>
+                      <td>
                         <div className={styles.actionButtons}>
-                          <button 
-                            className={styles.editBtn} 
-                            aria-label="Modifier"
+                          <button
+                            className={styles.editBtn}
                             onClick={() => openEditModal(product)}
                           >
                             Éditer
                           </button>
-                          <button 
-                            className={styles.deleteBtn} 
-                            aria-label="Supprimer"
+                          <button
+                            className={styles.deleteBtn}
                             onClick={() => handleDelete(product.id)}
                           >
                             Suppr.
@@ -240,8 +328,11 @@ const AdminDashboard = () => {
                         <td className={styles.fw500}>#{order.id.slice(0, 8).toUpperCase()}</td>
                         <td>{new Date(order.date).toLocaleDateString('fr-FR')}</td>
                         <td>
-                          <div>{order.customer.name}</div>
+                          <div className={styles.fw500}>{order.customer.name}</div>
                           <div style={{ fontSize: '0.8rem', color: '#666' }}>{order.customer.email}</div>
+                          {order.customer.phone && (
+                            <div style={{ fontSize: '0.8rem', color: '#666' }}>{order.customer.phone}</div>
+                          )}
                         </td>
                         <td>
                           {order.items.map(item => (
@@ -262,8 +353,8 @@ const AdminDashboard = () => {
                         </td>
                         <td>
                           {order.status === 'En attente' && (
-                            <button 
-                              className={styles.editBtn} 
+                            <button
+                              className={styles.editBtn}
                               onClick={() => updateOrderStatus(order.id, 'Expédiée')}
                             >
                               Marquer Expédiée
@@ -280,7 +371,7 @@ const AdminDashboard = () => {
         )}
       </main>
 
-      {/* Modal Reusable for Add / Edit */}
+      {/* Modal Ajout / Édition */}
       {isModalOpen && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
@@ -288,39 +379,87 @@ const AdminDashboard = () => {
               <h2>{editingProduct ? 'Modifier le produit' : 'Nouveau Produit'}</h2>
               <button className={styles.closeBtn} onClick={closeModal}>×</button>
             </div>
-            
+
             <form onSubmit={handleSave} className={styles.modalForm}>
-              {/* Informations Générales */}
+
+              {/* ── Informations Générales ── */}
               <div className={styles.formSection}>
                 <h3>Informations globales</h3>
+
                 <div className={styles.formGroup}>
                   <label htmlFor="name">Nom du Produit *</label>
                   <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
                 </div>
-                
+
                 <div className={styles.formGroup}>
                   <label>Statut</label>
                   <div className={styles.radioGroup}>
-                    <label><input type="radio" name="status" value="true" checked={formData.status === true || formData.status === 'true'} onChange={() => setFormData({...formData, status: true})} /> Activé</label>
-                    <label><input type="radio" name="status" value="false" checked={formData.status === false || formData.status === 'false'} onChange={() => setFormData({...formData, status: false})} /> Désactivé</label>
+                    <label>
+                      <input type="radio" name="status" checked={formData.status === true || formData.status === 'true'} onChange={() => setFormData(p => ({ ...p, status: true }))} />
+                      ✔ Activé
+                    </label>
+                    <label>
+                      <input type="radio" name="status" checked={formData.status === false || formData.status === 'false'} onChange={() => setFormData(p => ({ ...p, status: false }))} />
+                      ✖ Désactivé
+                    </label>
                   </div>
                 </div>
 
+                {/* Fabricant avec bouton Créer */}
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label htmlFor="manufacturer">Fabricant</label>
-                    <select id="manufacturer" name="manufacturer" value={formData.manufacturer} onChange={handleChange}>
-                      <option value="">-- Choisir --</option>
-                      <option value="BARTCHER">BARTCHER</option>
-                      <option value="SAMSUNG">SAMSUNG</option>
-                      <option value="TEFAL">TEFAL</option>
-                    </select>
+                    <div className={styles.fieldWithCreate}>
+                      <select id="manufacturer" name="manufacturer" value={formData.manufacturer} onChange={handleChange}>
+                        <option value="">-- Choisir --</option>
+                        {manufacturers.map(m => <option key={m} value={m}>{m}</option>)}
+                      </select>
+                      <button type="button" className={styles.createBtn} onClick={() => { setShowCreateManufacturer(v => !v); setShowCreateSupplier(false); }}>
+                        + Créer
+                      </button>
+                    </div>
+                    {showCreateManufacturer && (
+                      <div className={styles.inlineCreate}>
+                        <input
+                          type="text"
+                          placeholder="Nom du fabricant"
+                          value={newManufacturerName}
+                          onChange={e => setNewManufacturerName(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddManufacturer())}
+                          autoFocus
+                        />
+                        <button type="button" className={styles.createConfirmBtn} onClick={handleAddManufacturer}>Ajouter</button>
+                        <button type="button" className={styles.createCancelBtn} onClick={() => setShowCreateManufacturer(false)}>Annuler</button>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Fournisseur avec bouton Créer */}
                   <div className={styles.formGroup}>
                     <label htmlFor="supplier">Fournisseur</label>
-                    <select id="supplier" name="supplier" value={formData.supplier} onChange={handleChange}>
-                      <option value="">-- Choisir (optionnel) --</option>
-                    </select>
+                    <div className={styles.fieldWithCreate}>
+                      <select id="supplier" name="supplier" value={formData.supplier} onChange={handleChange}>
+                        <option value="">-- Choisir (optionnel) --</option>
+                        {suppliers.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                      <button type="button" className={styles.createBtn} onClick={() => { setShowCreateSupplier(v => !v); setShowCreateManufacturer(false); }}>
+                        + Créer
+                      </button>
+                    </div>
+                    {showCreateSupplier && (
+                      <div className={styles.inlineCreate}>
+                        <input
+                          type="text"
+                          placeholder="Nom du fournisseur"
+                          value={newSupplierName}
+                          onChange={e => setNewSupplierName(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddSupplier())}
+                          autoFocus
+                        />
+                        <button type="button" className={styles.createConfirmBtn} onClick={handleAddSupplier}>Ajouter</button>
+                        <button type="button" className={styles.createCancelBtn} onClick={() => setShowCreateSupplier(false)}>Annuler</button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -360,7 +499,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Prix */}
+              {/* ── Prix ── */}
               <div className={styles.formSection}>
                 <h3>Prix</h3>
                 <div className={styles.formRow}>
@@ -384,63 +523,144 @@ const AdminDashboard = () => {
 
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                    <label htmlFor="price">Prix de vente TTC (€) * (Prix Final)</label>
+                    <label htmlFor="price">Prix de vente TTC (€) * <span style={{fontWeight:'normal',fontSize:'0.8rem'}}>(auto-calculé)</span></label>
                     <input type="number" step="0.01" id="price" name="price" value={formData.price} onChange={handleChange} required />
                   </div>
                   <div className={styles.formGroup}>
                     <label htmlFor="ecoTax">Eco-participation (€)</label>
                     <input type="number" step="0.01" id="ecoTax" name="ecoTax" value={formData.ecoTax} onChange={handleChange} />
+                    <span className={styles.helpText}>(Déjà incluse dans le prix)</span>
                   </div>
                   <div className={styles.formGroup}>
-                    <label htmlFor="discount">Réduction</label>
-                    <input type="number" step="0.01" id="discount" name="discount" value={formData.discount} onChange={handleChange} placeholder="€ ou %" />
+                    <label>Réduction</label>
+                    <div className={styles.discountRow}>
+                      <input type="number" step="0.01" name="discount" value={formData.discount} onChange={handleChange} placeholder="€" />
+                      <span>OU</span>
+                      <input type="number" step="1" name="discountPercent" value={formData.discountPercent} onChange={handleChange} placeholder="%" />
+                      <span>%</span>
+                    </div>
                   </div>
                 </div>
-                
+
+                {/* Dates de disponibilité */}
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="availableFrom">Dispo depuis</label>
+                    <input type="datetime-local" id="availableFrom" name="availableFrom" value={formData.availableFrom} onChange={handleChange} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label htmlFor="availableTo">Jusque</label>
+                    <input type="datetime-local" id="availableTo" name="availableTo" value={formData.availableTo} onChange={handleChange} />
+                  </div>
+                </div>
+
                 <div className={styles.checkboxGroup}>
                   <input type="checkbox" id="onSale" name="onSale" checked={formData.onSale} onChange={handleChange} />
-                  <label htmlFor="onSale">Affiche "en solde" sur la page produit</label>
+                  <label htmlFor="onSale">Affiche "en solde" sur la page produit et dans les catégories</label>
                 </div>
+
+                {/* Prix de vente final calculé */}
+                {formData.sellingPriceHT && (
+                  <div className={styles.priceFinalDisplay}>
+                    <strong>Prix de vente final :</strong>
+                    &nbsp;{computedPriceTTC()} € (TTC) / {(parseFloat(formData.sellingPriceHT) || 0).toFixed(2)} € (HT)
+                  </div>
+                )}
               </div>
 
-              {/* Quantité & SEO */}
+              {/* ── Quantité & Configuration ── */}
               <div className={styles.formSection}>
                 <h3>Quantité & Configuration</h3>
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
-                     <label htmlFor="category">Catégorie Primaire *</label>
-                     <select id="category" name="category" value={formData.category} onChange={handleChange}>
-                       {productCategories.map(cat => (<option key={cat} value={cat}>{cat}</option>))}
-                     </select>
+                    <label htmlFor="category">Catégorie Primaire *</label>
+                    <select id="category" name="category" value={formData.category} onChange={handleChange}>
+                      {productCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
                   </div>
                   <div className={styles.formGroup}>
                     <label htmlFor="stock">Quantité *</label>
                     <input type="number" id="stock" name="stock" min="0" value={formData.stock} onChange={handleChange} required />
                   </div>
                 </div>
-                
+
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label htmlFor="inStockMessage">Message quand en stock</label>
-                    <input type="text" id="inStockMessage" name="inStockMessage" value={formData.inStockMessage} onChange={handleChange} />
+                    <input type="text" id="inStockMessage" name="inStockMessage" value={formData.inStockMessage} onChange={handleChange} placeholder="En stock" />
                   </div>
                   <div className={styles.formGroup}>
-                    <label htmlFor="outOfStockMessage">Message lorsque hors-stock</label>
-                    <input type="text" id="outOfStockMessage" name="outOfStockMessage" value={formData.outOfStockMessage} onChange={handleChange} />
+                    <label htmlFor="outOfStockMessage">Message hors-stock mais commandable</label>
+                    <input type="text" id="outOfStockMessage" name="outOfStockMessage" value={formData.outOfStockMessage} onChange={handleChange} placeholder="ex: 8 JOURS" />
                   </div>
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="image">URL de l'image Globale (Catalogue) *</label>
-                  <input type="url" id="image" name="image" value={formData.image} onChange={handleChange} placeholder="https://..." required />
+                  <label>Si rupture de stock :</label>
+                  <div className={styles.radioGroup}>
+                    <label>
+                      <input type="radio" name="outOfStockBehavior" value="deny" checked={formData.outOfStockBehavior === 'deny'} onChange={handleChange} />
+                      Refuser les commandes
+                    </label>
+                    <label>
+                      <input type="radio" name="outOfStockBehavior" value="accept" checked={formData.outOfStockBehavior === 'accept'} onChange={handleChange} />
+                      Accepter les commandes
+                    </label>
+                    <label>
+                      <input type="radio" name="outOfStockBehavior" value="default" checked={formData.outOfStockBehavior === 'default'} onChange={handleChange} />
+                      Par défaut
+                    </label>
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Image du Produit (Catalogue) *</label>
+                  <div
+                    className={styles.imageUploadZone}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                  >
+                    {imagePreview ? (
+                      <div className={styles.imagePreviewContainer}>
+                        <img src={imagePreview} alt="Aperçu" className={styles.imagePreview} />
+                        <button
+                          type="button"
+                          className={styles.removeImageBtn}
+                          onClick={() => { setImagePreview(''); setFormData(p => ({ ...p, image: '' })); }}
+                        >
+                          Changer d'image
+                        </button>
+                      </div>
+                    ) : (
+                      <div className={styles.uploadPrompt}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ccc', marginBottom: '10px' }}>
+                          <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                          <circle cx="9" cy="9" r="2"/>
+                          <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                        </svg>
+                        <p>Glissez et déposez une image ici</p>
+                        <span style={{ margin: '10px 0', fontSize: '0.9rem', color: '#666' }}>OU</span>
+                        <label htmlFor="imageUpload" className={`btn btn-outline ${styles.browseBtn}`}>
+                          Parcourir vos fichiers
+                        </label>
+                        <input
+                          type="file"
+                          id="imageUpload"
+                          accept="image/*"
+                          onChange={(e) => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0]); }}
+                          style={{ display: 'none' }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Textes (SEO & Description) */}
+              {/* ── Textes / SEO ── */}
               <div className={styles.formSection}>
                 <h3>Textes (Apparaîtra dans les moteurs de recherche)</h3>
                 <div className={styles.formGroup}>
-                  <label htmlFor="summary">Résumé (SEO Court)</label>
+                  <label htmlFor="summary">Résumé (apparaîtra dans les moteurs de recherche)</label>
                   <textarea id="summary" name="summary" rows="2" value={formData.summary} onChange={handleChange}></textarea>
                 </div>
                 <div className={styles.formGroup}>
@@ -449,11 +669,12 @@ const AdminDashboard = () => {
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="tags">Tags (séparés par des virgules)</label>
-                  <input type="text" id="tags" name="tags" value={formData.tags} onChange={handleChange} placeholder="ex: dvd, lecteur dvd, hifi" />
+                  <input type="text" id="tags" name="tags" value={formData.tags} onChange={handleChange} placeholder="ex: vitrine, chauffante, présentoir" />
+                  <span className={styles.helpText}>Caractères interdits : &lt; &gt; ; = # &#123; &#125;</span>
                 </div>
                 <div className={styles.formGroup}>
-                  <label htmlFor="accessories">Accessoires (Recherche auto)</label>
-                  <input type="text" id="accessories" name="accessories" value={formData.accessories} onChange={handleChange} placeholder="Tapez les premières lettres..." />
+                  <label htmlFor="accessories">Accessoires (N'oubliez pas d'enregistrer le produit ensuite)</label>
+                  <input type="text" id="accessories" name="accessories" value={formData.accessories} onChange={handleChange} placeholder="Tapez les premières lettres du nom du produit..." />
                 </div>
               </div>
 

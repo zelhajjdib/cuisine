@@ -303,6 +303,154 @@
   font-size: 0.95rem;
 }
 
+/* Statut produit dans le tableau */
+.statusOn {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.statusOff {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+/* Bouton Créer inline (fabricant/fournisseur) */
+.fieldWithCreate {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.fieldWithCreate select {
+  flex: 1;
+}
+
+.createBtn {
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.createBtn:hover {
+  background-color: #bbdefb;
+}
+
+.inlineCreate {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background-color: #f0f7ff;
+  border: 1px solid #bbdefb;
+  border-radius: var(--radius-sm);
+}
+
+.inlineCreate input {
+  flex: 1;
+  padding: 5px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+.createConfirmBtn {
+  padding: 5px 12px;
+  background-color: #1565c0;
+  color: white;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background-color var(--transition-fast);
+}
+
+.createConfirmBtn:hover {
+  background-color: #0d47a1;
+}
+
+.createCancelBtn {
+  padding: 5px 10px;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.createCancelBtn:hover {
+  color: var(--color-primary);
+}
+
+/* Prix final affiché */
+.priceFinalDisplay {
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: #fffde7;
+  border: 1px solid #f9a825;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  color: #6d4c00;
+}
+
+/* Réduction (€ + %) côte à côte */
+.discountRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.discountRow input {
+  flex: 1;
+  min-width: 0;
+}
+
+.discountRow span {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* Fix sidebar nav buttons (au lieu de <a>) */
+.sidebarNav button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  color: rgba(255, 255, 255, 0.7);
+  transition: all var(--transition-fast);
+  font-size: 0.95rem;
+  border-left: 3px solid transparent;
+  background: none;
+  cursor: pointer;
+}
+
+.sidebarNav button:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sidebarNav button.active {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left-color: var(--color-accent);
+  font-weight: 500;
+}
+
 /* Nouvelles Classes Prestashop Style */
 .formSection {
   border: 1px solid var(--color-border);
@@ -354,6 +502,72 @@
   color: var(--color-text);
   cursor: pointer;
   margin: 0;
+}
+
+/* Image Upload specific styles */
+.imageUploadZone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  text-align: center;
+  background-color: var(--color-surface);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.imageUploadZone:hover {
+  border-color: var(--color-accent);
+  background-color: var(--color-surface-alt);
+}
+
+.imagePreviewContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.imagePreview {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  box-shadow: var(--shadow-sm);
+}
+
+.removeImageBtn {
+  background-color: #ffebee;
+  color: #c62828;
+  border: none;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color var(--transition-fast);
+}
+
+.removeImageBtn:hover {
+  background-color: #ffcdd2;
+}
+
+.uploadPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.uploadPrompt p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.browseBtn {
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: var(--space-2) var(--space-4);
+  display: inline-block;
 }
 
 @media (max-width: 1024px) {
