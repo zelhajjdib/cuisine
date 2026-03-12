@@ -55,24 +55,49 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotalAmount, onSuccess 
 
     const cardElement = elements.getElement(CardElement);
 
-    // ─── Quand un backend sera disponible, remplacer ce bloc par : ───────────
-    // const { data } = await fetch('/api/create-payment-intent', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ amount: Math.round(cartTotalAmount * 100), currency: 'eur' })
-    // }).then(r => r.json());
-    //
-    // const { error, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret, {
-    //   payment_method: { card: cardElement, billing_details: { name, email } }
-    // });
-    // if (error) { setCardError(error.message); setProcessing(false); return; }
-    // ─────────────────────────────────────────────────────────────────────────
+    // 1. Créer le PaymentIntent côté serveur (montant validé depuis la DB)
+    let clientSecret;
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-    // Simulation paiement (à remplacer par le bloc ci-dessus avec backend)
-    const { error } = await stripe.createPaymentMethod({
-      type: 'card',
-      card: cardElement,
-      billing_details: { name, email },
+      const items = cartItems.map(item => ({ id: item.id, quantity: item.quantity }));
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/create-payment-intent`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          items,
+          customer_name: name.trim(),
+          customer_email: email.trim(),
+          customer_phone: phone.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setCardError(data.error || 'Erreur lors de la création du paiement.');
+        setProcessing(false);
+        return;
+      }
+
+      clientSecret = data.clientSecret;
+    } catch {
+      setCardError('Impossible de contacter le serveur. Vérifiez votre connexion.');
+      setProcessing(false);
+      return;
+    }
+
+    // 2. Confirmer le paiement avec la carte Stripe
+    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: cardElement,
+        billing_details: { name: name.trim(), email: email.trim() },
+      },
     });
 
     if (error) {
@@ -81,8 +106,13 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotalAmount, onSuccess 
       return;
     }
 
-    // Paiement simulé validé
-    onSuccess({ name: name.trim(), email: email.trim(), phone: phone.trim() });
+    // 3. Paiement confirmé — la commande est créée par le webhook Stripe
+    onSuccess({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      paymentIntentId: paymentIntent.id,
+    });
     setProcessing(false);
   };
 

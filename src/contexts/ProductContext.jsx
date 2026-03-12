@@ -1,59 +1,109 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { supabase, toCamelCase, toSnakeCase, rowsToCamel } from '../lib/supabase';
 
 const ProductContext = createContext();
 
 export const useProducts = () => {
   const context = useContext(ProductContext);
-  if (!context) {
-    throw new Error('useProducts must be used within a ProductProvider');
-  }
+  if (!context) throw new Error('useProducts must be used within a ProductProvider');
   return context;
 };
 
-const defaultProducts = [
-  { id: 1, name: 'Couteau de Chef Japonais 20cm', category: 'Coutellerie', price: 129.99, stock: 12, description: 'Lame forgée main en acier damas. Parfait pour les viandes et poissons.', image: 'https://images.unsplash.com/photo-1593618998160-e34014e67546?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-  { id: 2, name: 'Batterie de Cuisine Inox 5 Pièces', category: 'Cuisson', price: 299.00, stock: 5, description: 'Set comprenant casseroles et faitouts fond épais "triple épaisseur". Compatible tous feux dont induction.', image: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-  { id: 3, name: 'Robot Pâtissier Multifonction', category: 'Électroménager', price: 450.00, stock: 3, description: 'Modèle pro avec cuve 6.9L. Fourni avec fouet, batteur plat et crochet pétrisseur.', image: 'https://images.unsplash.com/photo-1585515320310-259814833e62?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-  { id: 4, name: 'Planche à Découper Billot', category: 'Accessoires', price: 89.50, stock: 8, description: 'Bois debout massif de hêtre. Hautement résistante, n\'use pas rapidement les lames.', image: 'https://images.unsplash.com/photo-1580928224581-2287233261a8?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-  { id: 5, name: 'Poêle En Fonte Émaillée 28cm', category: 'Cuisson', price: 145.00, stock: 15, description: 'Poignée ergonomique, répartition parfaite de la chaleur. Saisie parfaite des viandes.', image: 'https://images.unsplash.com/photo-1495147466023-ac5c588e2e94?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-  { id: 6, name: 'Mallette Couteaux Pro 12 Pièces', category: 'Coutellerie', price: 350.00, stock: 0, description: 'Mallette rigide de transport sécurisée incluant tous les indispensables pour un étudiant en école hôtelière.', image: 'https://images.unsplash.com/photo-1574223214495-5cb95a32adbb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80' },
-];
-
 export const ProductProvider = ({ children }) => {
-  const [products, setProducts] = useState(() => {
-    // Try to load from localStorage first
-    const saved = localStorage.getItem('shop_products');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error("Could not parse products from localstorage", e);
-      }
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // ─── Chargement initial ────────────────────────────────────────────────────
+  const fetchProducts = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error) {
+      console.error('[ProductContext] fetchProducts error:', error.message);
+      setLoading(false);
+      return;
     }
-    // Fall back to default
-    return defaultProducts;
-  });
+    setProducts(rowsToCamel(data));
+    setLoading(false);
+  }, []);
 
-  // Save to localStorage whenever products array changes
   useEffect(() => {
-    localStorage.setItem('shop_products', JSON.stringify(products));
-  }, [products]);
+    fetchProducts();
 
-  const addProduct = (newProduct) => {
-    const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-    setProducts([...products, { ...newProduct, id: newId }]);
+    // Temps réel : mise à jour automatique si l'admin modifie depuis un autre onglet
+    const channel = supabase
+      .channel('products_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, fetchProducts)
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [fetchProducts]);
+
+  // ─── Ajouter un produit ────────────────────────────────────────────────────
+  const addProduct = async (newProduct) => {
+    const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = newProduct;
+    const snakeProduct = toSnakeCase(rest);
+
+    const { data, error } = await supabase
+      .from('products')
+      .insert(snakeProduct)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[ProductContext] addProduct error:', error.message);
+      return null;
+    }
+
+    const product = toCamelCase(data);
+    setProducts(prev => [...prev, product]);
+    return product;
   };
 
-  const updateProduct = (id, updatedFields) => {
-    setProducts(products.map(p => p.id === id ? { ...p, ...updatedFields } : p));
+  // ─── Modifier un produit ───────────────────────────────────────────────────
+  const updateProduct = async (id, updatedFields) => {
+    // Retire les champs auto-gérés par Supabase
+    const { id: _id, createdAt: _c, updatedAt: _u, ...rest } = updatedFields;
+    const snakeFields = toSnakeCase(rest);
+    // Supprime les clés snake déjà auto-gérées si présentes
+    delete snakeFields.created_at;
+    delete snakeFields.updated_at;
+
+    const { data, error } = await supabase
+      .from('products')
+      .update(snakeFields)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[ProductContext] updateProduct error:', error.message);
+      return;
+    }
+
+    const updated = toCamelCase(data);
+    setProducts(prev => prev.map(p => p.id === id ? updated : p));
   };
 
-  const deleteProduct = (id) => {
-    setProducts(products.filter(p => p.id !== id));
+  // ─── Supprimer un produit ──────────────────────────────────────────────────
+  const deleteProduct = async (id) => {
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('[ProductContext] deleteProduct error:', error.message);
+      return;
+    }
+
+    setProducts(prev => prev.filter(p => p.id !== id));
   };
 
   return (
-    <ProductContext.Provider value={{ products, addProduct, updateProduct, deleteProduct }}>
+    <ProductContext.Provider value={{ products, loading, addProduct, updateProduct, deleteProduct, refetch: fetchProducts }}>
       {children}
     </ProductContext.Provider>
   );

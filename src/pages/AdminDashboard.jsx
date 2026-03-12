@@ -3,19 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useProducts } from '../contexts/ProductContext';
 import { useOrders } from '../contexts/OrderContext';
-import { CATEGORIES } from '../constants/categories';
+import { CATEGORIES, CATEGORY_TREE } from '../constants/categories';
+import { supabase } from '../lib/supabase';
 import styles from './AdminDashboard.module.css';
 
 const productCategories = CATEGORIES.filter(c => c !== 'Toutes');
-
-const loadFromStorage = (key, fallback) => {
-  try {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : fallback;
-  } catch {
-    return fallback;
-  }
-};
 
 const AdminDashboard = () => {
   const { isAdmin, logout } = useAuth();
@@ -27,42 +19,46 @@ const AdminDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
-  // Fabricants & Fournisseurs dynamiques
-  const [manufacturers, setManufacturers] = useState(() =>
-    loadFromStorage('shop_manufacturers', ['BARTCHER', 'SAMSUNG', 'TEFAL'])
-  );
-  const [suppliers, setSuppliers] = useState(() =>
-    loadFromStorage('shop_suppliers', [])
-  );
+  // Fabricants & Fournisseurs depuis Supabase
+  const [manufacturers, setManufacturers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [showCreateManufacturer, setShowCreateManufacturer] = useState(false);
   const [newManufacturerName, setNewManufacturerName] = useState('');
   const [showCreateSupplier, setShowCreateSupplier] = useState(false);
   const [newSupplierName, setNewSupplierName] = useState('');
 
   useEffect(() => {
-    localStorage.setItem('shop_manufacturers', JSON.stringify(manufacturers));
-  }, [manufacturers]);
+    const fetchLists = async () => {
+      const [{ data: mfr }, { data: sup }] = await Promise.all([
+        supabase.from('manufacturers').select('name').order('name'),
+        supabase.from('suppliers').select('name').order('name'),
+      ]);
+      if (mfr) setManufacturers(mfr.map(r => r.name));
+      if (sup) setSuppliers(sup.map(r => r.name));
+    };
+    fetchLists();
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('shop_suppliers', JSON.stringify(suppliers));
-  }, [suppliers]);
-
-  const handleAddManufacturer = () => {
+  const handleAddManufacturer = async () => {
     const name = newManufacturerName.trim().toUpperCase();
     if (!name || manufacturers.includes(name)) return;
-    const updated = [...manufacturers, name];
-    setManufacturers(updated);
-    setFormData(prev => ({ ...prev, manufacturer: name }));
+    const { error } = await supabase.from('manufacturers').insert({ name });
+    if (!error) {
+      setManufacturers(prev => [...prev, name].sort());
+      setFormData(prev => ({ ...prev, manufacturer: name }));
+    }
     setNewManufacturerName('');
     setShowCreateManufacturer(false);
   };
 
-  const handleAddSupplier = () => {
+  const handleAddSupplier = async () => {
     const name = newSupplierName.trim();
     if (!name || suppliers.includes(name)) return;
-    const updated = [...suppliers, name];
-    setSuppliers(updated);
-    setFormData(prev => ({ ...prev, supplier: name }));
+    const { error } = await supabase.from('suppliers').insert({ name });
+    if (!error) {
+      setSuppliers(prev => [...prev, name].sort());
+      setFormData(prev => ({ ...prev, supplier: name }));
+    }
     setNewSupplierName('');
     setShowCreateSupplier(false);
   };
@@ -99,6 +95,7 @@ const AdminDashboard = () => {
     tags: '',
     accessories: '',
     category: productCategories[0],
+    subcategory: '',
     image: ''
   };
 
@@ -574,10 +571,28 @@ const AdminDashboard = () => {
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label htmlFor="category">Catégorie Primaire *</label>
-                    <select id="category" name="category" value={formData.category} onChange={handleChange}>
+                    <select
+                      id="category"
+                      name="category"
+                      value={formData.category}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, category: e.target.value, subcategory: '' }));
+                      }}
+                    >
                       {productCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
                   </div>
+                  {CATEGORY_TREE[formData.category]?.length > 0 && (
+                    <div className={styles.formGroup}>
+                      <label htmlFor="subcategory">Sous-catégorie</label>
+                      <select id="subcategory" name="subcategory" value={formData.subcategory} onChange={handleChange}>
+                        <option value="">-- Toutes --</option>
+                        {CATEGORY_TREE[formData.category].map(sub => (
+                          <option key={sub} value={sub}>{sub}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div className={styles.formGroup}>
                     <label htmlFor="stock">Quantité *</label>
                     <input type="number" id="stock" name="stock" min="0" value={formData.stock} onChange={handleChange} required />

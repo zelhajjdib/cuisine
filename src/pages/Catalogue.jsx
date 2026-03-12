@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useProducts } from '../contexts/ProductContext';
 import { useSearch } from '../contexts/SearchContext';
-import { CATEGORIES } from '../constants/categories';
+import { CATEGORIES, CATEGORY_TREE } from '../constants/categories';
 import styles from './Catalogue.module.css';
 
 const Catalogue = () => {
@@ -11,7 +11,8 @@ const Catalogue = () => {
   const { products } = useProducts();
   const { globalSearchQuery, setGlobalSearchQuery, shouldFocusSearch, clearSearchFocus } = useSearch();
   const [activeCategory, setActiveCategory] = useState('Toutes');
-  
+  const [activeSubcategory, setActiveSubcategory] = useState('');
+
   const searchInputRef = useRef(null);
 
   useEffect(() => {
@@ -23,11 +24,14 @@ const Catalogue = () => {
     }
   }, [shouldFocusSearch, clearSearchFocus]);
 
+  const subcategories = activeCategory !== 'Toutes' ? (CATEGORY_TREE[activeCategory] ?? []) : [];
+
   const filteredProducts = products.filter(product => {
     if (product.status === false) return false;
     const matchesCategory = activeCategory === 'Toutes' || product.category === activeCategory;
+    const matchesSubcategory = !activeSubcategory || product.subcategory === activeSubcategory;
     const matchesSearch = product.name.toLowerCase().includes(globalSearchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesSubcategory && matchesSearch;
   });
 
   return (
@@ -60,9 +64,9 @@ const Catalogue = () => {
             <ul className={styles.categoryList}>
               {CATEGORIES.map(cat => (
                 <li key={cat}>
-                  <button 
+                  <button
                     className={`${styles.categoryBtn} ${activeCategory === cat ? styles.active : ''}`}
-                    onClick={() => setActiveCategory(cat)}
+                    onClick={() => { setActiveCategory(cat); setActiveSubcategory(''); }}
                   >
                     {cat}
                   </button>
@@ -70,6 +74,32 @@ const Catalogue = () => {
               ))}
             </ul>
           </div>
+
+          {subcategories.length > 0 && (
+            <div className={styles.filterGroup}>
+              <h3>Sous-catégories</h3>
+              <ul className={styles.categoryList}>
+                <li>
+                  <button
+                    className={`${styles.categoryBtn} ${activeSubcategory === '' ? styles.active : ''}`}
+                    onClick={() => setActiveSubcategory('')}
+                  >
+                    Toutes
+                  </button>
+                </li>
+                {subcategories.map(sub => (
+                  <li key={sub}>
+                    <button
+                      className={`${styles.categoryBtn} ${activeSubcategory === sub ? styles.active : ''}`}
+                      onClick={() => setActiveSubcategory(sub)}
+                    >
+                      {sub}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </aside>
 
         {/* Product Grid */}
@@ -99,7 +129,7 @@ const Catalogue = () => {
               <p>Aucun produit ne correspond à votre recherche.</p>
               <button 
                 className="btn btn-outline" 
-                onClick={() => {setGlobalSearchQuery(''); setActiveCategory('Toutes')}}
+                onClick={() => { setGlobalSearchQuery(''); setActiveCategory('Toutes'); setActiveSubcategory(''); }}
                 style={{ marginTop: '1rem' }}
               >
                 Réinitialiser les filtres
