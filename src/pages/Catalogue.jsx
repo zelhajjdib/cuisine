@@ -24,8 +24,6 @@ const Catalogue = () => {
     }
   }, [shouldFocusSearch, clearSearchFocus]);
 
-  const subcategories = activeCategory !== 'Toutes' ? (CATEGORY_TREE[activeCategory] ?? []) : [];
-
   const filteredProducts = products.filter(product => {
     if (product.status === false) return false;
     const matchesCategory = activeCategory === 'Toutes' || product.category === activeCategory;
@@ -62,44 +60,47 @@ const Catalogue = () => {
           <div className={styles.filterGroup}>
             <h3>Catégories</h3>
             <ul className={styles.categoryList}>
-              {CATEGORIES.map(cat => (
-                <li key={cat}>
-                  <button
-                    className={`${styles.categoryBtn} ${activeCategory === cat ? styles.active : ''}`}
-                    onClick={() => { setActiveCategory(cat); setActiveSubcategory(''); }}
-                  >
-                    {cat}
-                  </button>
-                </li>
-              ))}
+              {CATEGORIES.map(cat => {
+                const subs = cat !== 'Toutes' ? (CATEGORY_TREE[cat] ?? []) : [];
+                const isOpen = activeCategory === cat;
+                return (
+                  <li key={cat}>
+                    <button
+                      className={`${styles.categoryBtn} ${isOpen ? styles.active : ''}`}
+                      onClick={() => {
+                        if (activeCategory === cat) {
+                          setActiveCategory('Toutes');
+                          setActiveSubcategory('');
+                        } else {
+                          setActiveCategory(cat);
+                          setActiveSubcategory('');
+                        }
+                      }}
+                    >
+                      {cat}
+                      {subs.length > 0 && (
+                        <span className={`${styles.chevron} ${isOpen ? styles.chevronOpen : ''}`}>▶</span>
+                      )}
+                    </button>
+                    {isOpen && subs.length > 0 && (
+                      <ul className={styles.subcategoryList}>
+                        {subs.map(sub => (
+                          <li key={sub}>
+                            <button
+                              className={`${styles.subcategoryBtn} ${activeSubcategory === sub ? styles.activeSub : ''}`}
+                              onClick={() => setActiveSubcategory(activeSubcategory === sub ? '' : sub)}
+                            >
+                              {sub}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
-
-          {subcategories.length > 0 && (
-            <div className={styles.filterGroup}>
-              <h3>Sous-catégories</h3>
-              <ul className={styles.categoryList}>
-                <li>
-                  <button
-                    className={`${styles.categoryBtn} ${activeSubcategory === '' ? styles.active : ''}`}
-                    onClick={() => setActiveSubcategory('')}
-                  >
-                    Toutes
-                  </button>
-                </li>
-                {subcategories.map(sub => (
-                  <li key={sub}>
-                    <button
-                      className={`${styles.categoryBtn} ${activeSubcategory === sub ? styles.active : ''}`}
-                      onClick={() => setActiveSubcategory(sub)}
-                    >
-                      {sub}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </aside>
 
         {/* Product Grid */}
