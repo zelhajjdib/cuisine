@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import styles from './CheckoutModal.module.css';
 
+const DEMO_MODE = !import.meta.env.VITE_SUPABASE_URL;
+
 const CARD_ELEMENT_OPTIONS = {
   style: {
     base: {
@@ -11,10 +13,7 @@ const CARD_ELEMENT_OPTIONS = {
       '::placeholder': { color: '#aab7c4' },
       iconColor: '#c6a87c',
     },
-    invalid: {
-      color: '#c62828',
-      iconColor: '#c62828',
-    },
+    invalid: { color: '#c62828', iconColor: '#c62828' },
   },
 };
 
@@ -48,19 +47,25 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotalAmount, onSuccess 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    if (!stripe || !elements) return;
 
     setProcessing(true);
     setCardError('');
 
+    // ── Mode démo : pas de paiement réel ──────────────────────────────────
+    if (DEMO_MODE) {
+      onSuccess({ name: name.trim(), email: email.trim(), phone: phone.trim() });
+      setProcessing(false);
+      return;
+    }
+
+    // ── Mode production : Stripe PaymentIntent ─────────────────────────────
+    if (!stripe || !elements) return;
     const cardElement = elements.getElement(CardElement);
 
-    // 1. Créer le PaymentIntent côté serveur (montant validé depuis la DB)
     let clientSecret;
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
       const items = cartItems.map(item => ({ id: item.id, quantity: item.quantity }));
 
       const res = await fetch(`${supabaseUrl}/functions/v1/create-payment-intent`, {
@@ -78,13 +83,11 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotalAmount, onSuccess 
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         setCardError(data.error || 'Erreur lors de la création du paiement.');
         setProcessing(false);
         return;
       }
-
       clientSecret = data.clientSecret;
     } catch {
       setCardError('Impossible de contacter le serveur. Vérifiez votre connexion.');
@@ -92,7 +95,6 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotalAmount, onSuccess 
       return;
     }
 
-    // 2. Confirmer le paiement avec la carte Stripe
     const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
       payment_method: {
         card: cardElement,
@@ -106,13 +108,7 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotalAmount, onSuccess 
       return;
     }
 
-    // 3. Paiement confirmé — la commande est créée par le webhook Stripe
-    onSuccess({
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-      paymentIntentId: paymentIntent.id,
-    });
+    onSuccess({ name: name.trim(), email: email.trim(), phone: phone.trim(), paymentIntentId: paymentIntent.id });
     setProcessing(false);
   };
 
@@ -192,34 +188,40 @@ const CheckoutModal = ({ isOpen, onClose, cartItems, cartTotalAmount, onSuccess 
             {formError && <p className={styles.errorMsg}>{formError}</p>}
           </div>
 
-          {/* Paiement Stripe */}
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px', verticalAlign: 'middle'}}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-              Informations de paiement
-            </h3>
-            <div className={styles.cardWrapper}>
-              <CardElement options={CARD_ELEMENT_OPTIONS} />
+          {/* Paiement Stripe — masqué en mode démo */}
+          {!DEMO_MODE && (
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px', verticalAlign: 'middle'}}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Informations de paiement
+              </h3>
+              <div className={styles.cardWrapper}>
+                <CardElement options={CARD_ELEMENT_OPTIONS} />
+              </div>
+              {cardError && <p className={styles.errorMsg}>{cardError}</p>}
+              <p className={styles.secureNote}>
+                Paiement 100% sécurisé · Cryptage SSL · Propulsé par Stripe
+              </p>
             </div>
-            {cardError && <p className={styles.errorMsg}>{cardError}</p>}
-            <p className={styles.secureNote}>
-              Paiement 100% sécurisé · Cryptage SSL · Propulsé par Stripe
+          )}
+
+          {DEMO_MODE && (
+            <p className={styles.secureNote} style={{textAlign:'center', padding: '0 1rem'}}>
+              Mode démonstration — aucun paiement réel débité
             </p>
-          </div>
+          )}
 
           <div className={styles.actions}>
             <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={processing}>
               Retour au panier
             </button>
-            <button
-              type="submit"
-              className={styles.payBtn}
-              disabled={!stripe || processing}
-            >
+            <button type="submit" className={styles.payBtn} disabled={processing}>
               {processing ? (
-                <span className={styles.loadingDots}>Traitement en cours<span>.</span><span>.</span><span>.</span></span>
+                <span className={styles.loadingDots}>Traitement<span>.</span><span>.</span><span>.</span></span>
+              ) : DEMO_MODE ? (
+                `Confirmer la commande · ${cartTotalAmount.toFixed(2)} €`
               ) : (
-                `Confirmer le paiement · ${cartTotalAmount.toFixed(2)} €`
+                `Payer · ${cartTotalAmount.toFixed(2)} €`
               )}
             </button>
           </div>

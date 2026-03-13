@@ -9,22 +9,39 @@ export const useOrders = () => {
   return context;
 };
 
+const DEMO_MODE = !import.meta.env.VITE_SUPABASE_URL;
+const STORAGE_KEY = 'shop_orders_demo';
+
+const loadDemoOrders = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch { return []; }
+};
+
+const saveDemoOrders = (orders) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+};
+
 export const OrderProvider = ({ children }) => {
   const [orders, setOrders] = useState([]);
 
-  // ─── Chargement des commandes (admin seulement via RLS) ───────────────────
+  // ─── Mode démo ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!DEMO_MODE) return;
+    setOrders(loadDemoOrders());
+  }, []);
+
+  // ─── Mode Supabase ─────────────────────────────────────────────────────────
   const fetchOrders = useCallback(async () => {
+    if (DEMO_MODE) return;
     const { data, error } = await supabase
       .from('orders')
       .select('*, order_items(*)')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      // Erreur RLS normale si non connecté (client côté public) — silencieux
-      return;
-    }
+    if (error) return;
 
-    // Normalise : convertit la commande et ses items en camelCase
     const normalized = data.map(order => ({
       ...toCamelCase(order),
       items: (order.order_items || []).map(item => ({
@@ -39,9 +56,9 @@ export const OrderProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    if (DEMO_MODE) return;
     fetchOrders();
 
-    // Temps réel : nouvelles commandes apparaissent automatiquement dans le dashboard
     const channel = supabase
       .channel('orders_realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
@@ -50,9 +67,24 @@ export const OrderProvider = ({ children }) => {
     return () => supabase.removeChannel(channel);
   }, [fetchOrders]);
 
-  // ─── Créer une commande (client invité) ───────────────────────────────────
-  const addOrder = async ({ items, totalAmount, customer, stripePaymentIntentId = '' }) => {
-    // 1. Insérer la commande
+  // ─── Créer une commande ────────────────────────────────────────────────────
+  const addOrder = async ({ items, totalAmount, customer }) => {
+    if (DEMO_MODE) {
+      const all = loadDemoOrders();
+      const newOrder = {
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        customer: { name: customer.name, email: customer.email, phone: customer.phone || '' },
+        items: items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
+        totalAmount,
+        status: 'En attente',
+      };
+      const updated = [newOrder, ...all];
+      saveDemoOrders(updated);
+      setOrders(updated);
+      return newOrder;
+    }
+
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -61,7 +93,7 @@ export const OrderProvider = ({ children }) => {
         customer_phone: customer.phone || '',
         total_amount: totalAmount,
         status: 'En attente',
-        stripe_payment_intent_id: stripePaymentIntentId,
+        stripe_payment_intent_id: customer.paymentIntentId || '',
       })
       .select()
       .single();
@@ -71,7 +103,6 @@ export const OrderProvider = ({ children }) => {
       return null;
     }
 
-    // 2. Insérer les articles de la commande
     const orderItems = items.map(item => ({
       order_id: order.id,
       product_id: item.id,
@@ -80,61 +111,39 @@ export const OrderProvider = ({ children }) => {
       quantity: item.quantity,
     }));
 
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItems);
+    await supabase.from('order_items').insert(orderItems);
 
-    if (itemsError) {
-      console.error('[OrderContext] addOrder items error:', itemsError.message);
-    }
-
-    // 3. Déduire le stock pour chaque article
     for (const item of items) {
-      await supabase.rpc('decrement_stock', {
-        p_product_id: item.id,
-        p_quantity: item.quantity,
-      }).catch(() => {
-        // Fallback si la fonction RPC n'est pas encore créée
-        supabase
-          .from('products')
-          .select('stock')
-          .eq('id', item.id)
-          .single()
-          .then(({ data: p }) => {
-            if (p) {
-              supabase.from('products')
-                .update({ stock: Math.max(0, p.stock - item.quantity) })
-                .eq('id', item.id);
-            }
-          });
-      });
+      await supabase.rpc('decrement_stock', { p_product_id: item.id, p_quantity: item.quantity })
+        .catch(() => {
+          supabase.from('products').select('stock').eq('id', item.id).single()
+            .then(({ data: p }) => {
+              if (p) supabase.from('products').update({ stock: Math.max(0, p.stock - item.quantity) }).eq('id', item.id);
+            });
+        });
     }
 
-    // 4. Ajout optimiste en local pour l'admin connecté
     const newOrder = {
       ...toCamelCase(order),
       items: items.map(i => ({ id: i.id, name: i.name, price: i.price, quantity: i.quantity })),
     };
     setOrders(prev => [newOrder, ...prev]);
-
     return newOrder;
   };
 
-  // ─── Modifier le statut d'une commande ────────────────────────────────────
+  // ─── Modifier le statut ────────────────────────────────────────────────────
   const updateOrderStatus = async (orderId, newStatus) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: newStatus })
-      .eq('id', orderId);
-
-    if (error) {
-      console.error('[OrderContext] updateOrderStatus error:', error.message);
+    if (DEMO_MODE) {
+      const all = loadDemoOrders();
+      const updated = all.map(o => o.id === orderId ? { ...o, status: newStatus } : o);
+      saveDemoOrders(updated);
+      setOrders(updated);
       return;
     }
 
-    setOrders(prev =>
-      prev.map(order => order.id === orderId ? { ...order, status: newStatus } : order)
-    );
+    const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+    if (error) { console.error('[OrderContext] updateOrderStatus error:', error.message); return; }
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
   };
 
   return (
